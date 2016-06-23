@@ -33,4 +33,5 @@ script:
   - echo ${COMPILER}
   - echo ${CXX}
   - $CXX --version
+  - if [[ "$COMPILER}" == "g++" ]]; then export NO_CXX14=true; fi
   - ./run_test.sh
