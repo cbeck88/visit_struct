@@ -81,8 +81,14 @@ void debug_print(const my_type & my_struct) {
 
 ```
 
-It should be noted that there are already libraries that do this, like `boost::fusion`,
-which does this and much much more.
+A nice feature of `visit_struct` is that `visit_struct::apply_visitor` always respects the
+C++11 value category of it's arguments.
+That is, if `my_struct` is a `const &`, then the fields will be passed to the visitor as
+`const &`. If it is an `lvalue reference`, they will be passed as `lvalue reference`'s,
+etc.
+
+It should be noted that there are already libraries that permit structure visitation like
+this, such as `boost::fusion`, which does this and much more.
 
 However, our library can be used as a single-header, header-only library with no external dependencies.
 The core `visit_struct.hpp` is in total about one hundred lines of code, depending on how you count,
@@ -171,7 +177,7 @@ It's debateable which is preferable, however, because the second one is more DRY
 (you don't have to repeat the field names), it seems less likely to give gross error
 messages, but overall, the implementation of that one is trickier. The second one
 also does not have the requirement that you jump down to filescope after declaring
-your structure in order to declare it visitable. YMMV.
+your structure in order to declare it visitable. YMMV, patches welcome :)
 
 ## Compatibility
 
