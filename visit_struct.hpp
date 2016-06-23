@@ -15,7 +15,11 @@
 #include <utility>
 #include <type_traits>
 
-#define CXX14_CONSTEXPR
+# if (defined __cplusplus) && (__cplusplus == 201103L)
+#   define VISIT_STRUCT_CONSTEXPR
+# else
+#   define VISIT_STRUCT_CONSTEXPR constexpr
+# endif
 
 namespace visit_struct {
 
@@ -38,7 +42,7 @@ struct is_visitable< T,
 
 // Interface
 template <typename S, typename V>
-CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
+VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   typename std::enable_if<
              traits::is_visitable<
                typename std::remove_cv<typename std::remove_reference<S>::type>::type
@@ -93,35 +97,35 @@ CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
 
 // This macro specializes the trait, provides "apply" method which does the work.
 
-#define VISITABLE_STRUCT(STRUCT_NAME, ...)                                             \
-namespace visit_struct {                                                               \
-namespace traits {                                                                     \
-                                                                                       \
-template <>                                                                            \
-struct visitable<STRUCT_NAME, void> {                                                  \
-  template <typename V>                                                                \
-  CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)       \
-  {                                                                                    \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                       \
-  }                                                                                    \
-                                                                                       \
-  template <typename V>                                                                \
-  CXX14_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance) \
-  {                                                                                    \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                       \
-  }                                                                                    \
-                                                                                       \
-  template <typename V>                                                                \
-  CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)      \
-  {                                                                                    \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                  \
-  }                                                                                    \
-                                                                                       \
-  static constexpr bool value = true;                                                  \
-};                                                                                     \
-                                                                                       \
-}                                                                                      \
-}                                                                                      \
+#define VISITABLE_STRUCT(STRUCT_NAME, ...)                                                         \
+namespace visit_struct {                                                                           \
+namespace traits {                                                                                 \
+                                                                                                   \
+template <>                                                                                        \
+struct visitable<STRUCT_NAME, void> {                                                              \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)            \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance)      \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)           \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  static constexpr bool value = true;                                                              \
+};                                                                                                 \
+                                                                                                   \
+}                                                                                                  \
+}                                                                                                  \
 static_assert(true, "")
 
 #endif // VISIT_STRUCT_HPP_INCLUDED
