@@ -14,8 +14,6 @@ install:
   - BOOST_VERSION=1.60.0
   - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
 
-  - if [[ "${BOOST_VERSION}" == "default" ]]; then BOOST_VERSION=1.60.0; fi
-
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
 
   - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
@@ -27,9 +25,6 @@ install:
 
   - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost
 
-#  - cd boost/tools/build && ./bootstrap.sh && ./b2 install --prefix=${DEPS_DIR}/b2
-#  - export PATH=${DEPS_DIR}/b2/bin:${PATH}
-
   - cd ${TRAVIS_BUILD_DIR}
   - pwd
   - ls
@@ -38,7 +33,9 @@ script:
   - echo ${COMPILER}
   - echo ${CXX}
   - $CXX --version
-  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_visit_struct.cpp
-  - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
-  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I${BOOST_INCLUDE_DIR} test_visit_struct_boost_fusion.cpp
-  - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
+#  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_visit_struct.cpp
+#  - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
+#  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I${BOOST_INCLUDE_DIR} test_visit_struct_boost_fusion.cpp
+#  - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
+
+  - ./run_tests.sh
