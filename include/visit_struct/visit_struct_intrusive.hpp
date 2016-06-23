@@ -74,11 +74,21 @@ struct intrusive_tag{};
  * Helper structures which perform pack expansion in order to visit a structure.
  */
 
+// In MSVC 2015, a pointer to member cannot be constexpr, however it can be a
+// template parameter. This is a workaround.
+
+template <typename S, typename T, T S::*member_ptr>
+struct member_ptr_helper {
+  static constexpr T & apply(S & s) { return s.*member_ptr; }
+  static constexpr const T & apply(const S & s) { return s.*member_ptr; }
+  static constexpr T && apply(S && s) { return std::move(s.*member_ptr); }
+};
+
 template <typename M>
 struct member_helper {
   template <typename V, typename S>
   VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
-    visitor(M::member_name, std::forward<S>(structure_instance).*(M::member_ptr));
+    visitor(M::member_name, M::apply(std::forward<S>(structure_instance)));
   }
 };
 
@@ -145,9 +155,12 @@ static_assert(true, "")
 
 #define VISITABLE(TYPE, NAME)                                                                                    \
 TYPE NAME;                                                                                                       \
-struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) {                                                                     \
+struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                                                     \
+  visit_struct::detail::member_ptr_helper<VISIT_STRUCT_CURRENT_TYPE,                                             \
+                                          TYPE,                                                                  \
+                                          &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
+{                                                                                                                \
   static constexpr const char * const member_name = #NAME;                                                       \
-  static constexpr const auto member_ptr = &VISIT_STRUCT_CURRENT_TYPE::NAME;                                     \
 };                                                                                                               \
 static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
                                                VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \

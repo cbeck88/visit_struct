@@ -15,7 +15,7 @@
 #include <utility>
 #include <type_traits>
 
-# if (defined __cplusplus) && (__cplusplus == 201103L)
+# if (defined _MSC_VER) || (!defined __cplusplus) || (__cplusplus == 201103L)
 #   define VISIT_STRUCT_CONSTEXPR
 # else
 #   define VISIT_STRUCT_CONSTEXPR constexpr
