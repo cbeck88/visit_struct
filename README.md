@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/cbeck88/visit_struct.svg?branch=master)](http://travis-ci.org/cbeck88/visit_struct)
 [![Boost licensed](https://img.shields.io/badge/license-Boost-blue.svg)](./LICENSE)
 
-A single-header header-only library for providing **structure visitors** to C++11.
+A header-only library for providing **structure visitors** to C++11.
 
 In C++ there is no built-in way to iterate over the members of a `struct` type.
 
@@ -11,6 +11,8 @@ Oftentimes, an application may contain several small "POD" datatypes, and one
 would like to be able to easily serialize and deserialize, print them in debugging
 info, and so on. Usually, the programmer has to write a bunch of boilerplate
 for each one of these, listing the struct members over and over again.
+
+(This is only the most obvious use of structure visitors.)
 
 Naively one would like to be able to write something like:
 
@@ -90,11 +92,93 @@ and is fully functional on its own.
 member functions. When you need more power, and you also need to support pre-C++11, that
 is what you should use, but for some applications, `visit_struct` is all that you need.
 
+**Note:** The macro `VISITABLE_STRUCT` must be used at filescope, an error will occur if it is
+used within a namespace. You can simply include the namespaces as part of the type, e.g.
+
+```
+VISITABLE_STRUCT(foo::bar::baz, a, b, c);
+```
+
 ## Integration with `boost::fusion`
 
 `visit_struct` also has support code so that it can be used with "fusion-adapted structures".
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
 if you include the extra header `visit_struct_boost_fusion.hpp`.
+
+## "Intrusive" Syntax
+
+A third header is provided, `visit_struct_intrusive.hpp` which permits the following syntax:
+
+```
+
+struct my_type {
+  BEGIN_VISITABLES(my_type);
+  VISITABLE(int, a);
+  VISITABLE(float, b);
+  VISITABLE(std::string, c);
+  END_VISITABLES;
+};
+
+```
+
+This declares a structure which is essentially the same as
+
+```
+struct my_type {
+  int a;
+  float b;
+  std::string c;
+};
+```
+
+There are no additional data members defined within the type, although there are
+some "secret" static declarations which are occurring. That's why it's "intrusive".
+There is still no run-time overhead.
+
+Each line above is a separate statement within the body of `my_type` and arbitrary other C++
+declarations may appear between them.
+
+```
+struct my_type {
+
+  int not_visitable;
+  double not_visitable_either;
+
+  BEGIN_VISITABLES(my_type);
+  VISITABLE(int, a);
+  VISITABLE(float, b);
+
+  typedef std::pair<std::string, std::string> spair;
+
+  VISITABLE(spair, p);
+
+  void do_nothing() const { }
+
+  VISITABLE(std::string, c);
+
+  END_VISITABLES;
+};
+
+```
+
+When `visit_struct::apply_visitor` is used, each member declared with `VISITABLE`
+will be visited, in the order that they are declared.
+
+The implementation of the "intrusive" version is actually very different from the
+non-intrusive one. In the standard one, a trick with macros is used to iterate over
+a list. In the intrusive one, actually templates are used to iterate over the list.
+It's debateable which is preferable, however, because the second one is more DRY
+(you don't have to repeat the field names), it seems less likely to give gross error
+messages, but overall, the implementation of that one is trickier. The second one
+also does not have the requirement that you jump down to filescope after declaring
+your structure in order to declare it visitable. YMMV.
+
+## Compatibility
+
+**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.6`. It has been
+tested with MSVC 2015 and it works there also. The "intrusive" syntax seems to compile fastest in MSVC,
+based on experiments with the [online compiler|http://webcompiler.cloudapp.net/], I have no idea why
+this might be however.
 
 ## Licensing and Distribution
 
