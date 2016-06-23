@@ -83,9 +83,8 @@ void debug_print(const my_type & my_struct) {
 
 A nice feature of `visit_struct` is that `visit_struct::apply_visitor` always respects the
 C++11 value category of it's arguments.
-That is, if `my_struct` is a `const &`, then the fields will be passed to the visitor as
-`const &`. If it is an `lvalue reference`, they will be passed as `lvalue reference`'s,
-etc.
+That is, if `my_struct` is a const l-value reference, non-const l-value reference, or r-value
+reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly.
 
 It should be noted that there are already libraries that permit structure visitation like
 this, such as `boost::fusion`, which does this and much more.
