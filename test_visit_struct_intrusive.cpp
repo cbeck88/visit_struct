@@ -63,6 +63,7 @@ void debug_print(const T & t) {
 }
 
 int main() {
+  std::cerr << __FILE__ << std::endl;
 
   {
     test::foo s{ true, 5, 7.5f };

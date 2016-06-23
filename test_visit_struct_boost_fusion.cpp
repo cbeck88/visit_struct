@@ -112,6 +112,8 @@ void debug_print(const T & t) {
  */
 
 int main() {
+  std::cerr << __FILE__ << std::endl;
+
   {
     test_struct_one s{ 5, 7.5f, "asdf" };
 
