@@ -177,7 +177,7 @@ your structure in order to declare it visitable. YMMV.
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.6`. It has been
 tested with MSVC 2015 and it works there also. The "intrusive" syntax seems to compile fastest in MSVC,
-based on experiments with the [online compiler|http://webcompiler.cloudapp.net/], I have no idea why
+based on experiments with the [msvc online compiler](http://webcompiler.cloudapp.net/), I have no idea why
 this might be however.
 
 ## Licensing and Distribution
