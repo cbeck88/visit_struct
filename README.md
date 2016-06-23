@@ -24,8 +24,9 @@ However, this syntax can never be legal in C++, because when we iterate using a
 for loop, the iterator has a fixed static type, and `member.value` similarly has
 a fixed static type. But the struct member types must be allowed to vary.
 
-The standard way to overcome issues like that is to use the visitor pattern. One
-could hope that the following kind of syntax would be legal:
+The standard way to overcome issues like that (without taking a performance hit)
+is to use the visitor pattern. One could hope that the following kind of syntax
+would be legal:
 
 ```
 
