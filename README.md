@@ -88,6 +88,8 @@ However, our library is a single-header, header-only library with no external de
 member functions. When you need more power, and you also need to support pre-C++11, that
 is what you should use, but for some applications, `visit_struct` is all that you need.
 
+## Integration with `boost`
+
 `visit_struct` also has support code so that it can be used with "fusion-adapted structures".
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
 if you include the extra header `visit_struct_boost_fusion.hpp`.
