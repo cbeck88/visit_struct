@@ -33,8 +33,7 @@ script:
   - echo ${CXX}
   - $CXX --version
   - if [[ "$COMPILER}" == "g++" ]]; then export NO_CXX14=true; fi
-  - ./run_test.sh
+  - NO_CXX14=${NO_CXX14} ./run_test.sh
 
   - echo "With Boost ${BOOST_VERSION}"
-  - export BOOST_INCLUDE_DIR=${DEPS_DIR}/boost
-  - ./run_test.sh
+  - NO_CXX14=${NO_CXX14} BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
