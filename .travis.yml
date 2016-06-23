@@ -16,5 +16,5 @@ script:
   - $CXX --version
   - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_visit_struct.cpp
   - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
-  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I/usr/include test_visit_struct_boost.cpp
+  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I/usr/include test_visit_struct_boost_fusion.cpp
   - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
