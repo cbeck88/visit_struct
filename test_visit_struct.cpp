@@ -213,7 +213,7 @@ int main() {
 
   // Test move semantics
   {
-    test_struct_one s{};
+    test_struct_one s{0, 0, ""};
 
     test_visitor_three vis;
 

@@ -105,7 +105,7 @@ int main() {
 
   // Test move semantics
   {
-    test::foo s{};
+    test::foo s{true, 0, 0};
 
     debug_print(s);
 
