@@ -219,7 +219,7 @@ int main() {
 
   // Test move semantics
   {
-    test_struct_one s;
+    test_struct_one s{};
 
     test_visitor_three vis;
 
@@ -233,5 +233,4 @@ int main() {
     visit_struct::apply_visitor(vis, std::move(s));
     assert(vis.result == 3);
   }
-
 }
