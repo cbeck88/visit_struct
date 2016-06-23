@@ -23,6 +23,10 @@
  * do not have corresponding definitions and generate no object code, they are
  * merely a device for metaprogramming, exploiting overload resolution rules to
  * create "state". In normal code, you won't be able to detect any of this.
+ *
+ * This sounds a lot more evil than it really is -- it is morally equivalent to
+ * `std::declval`, I would say, which is also specified to be a declaration with
+ * no definition, which you simply aren't permitted to odr-use.
  */
 
 #include <visit_struct/visit_struct.hpp>
