@@ -2,6 +2,12 @@
 
 set -e
 
+if [[ "$CXX" == "" ]]; then
+  CXX="g++";
+fi
+
+echo ${CXX}
+
 if [[ "$BOOST_INCLUDE_DIR" == "" ]]; then
   BOOST_INCLUDE_DIR="/usr/include";
 fi

@@ -7,28 +7,7 @@ compiler:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq gdb
-
-install:
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - BOOST_VERSION=1.60.0
-  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
-
-  - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
-
-  - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
-  - if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi
-
-  - cd boost
-  - pwd
-  - ls
-  - ls boost/mpl/range_c.hpp
-
-  - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost
-
-  - cd ${TRAVIS_BUILD_DIR}
-  - pwd
-  - ls
+  - sudo apt-get install -qq gdb libboost-dev
 
 script:
   - echo ${COMPILER}

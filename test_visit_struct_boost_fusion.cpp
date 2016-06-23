@@ -27,7 +27,13 @@ struct test_struct_two {
   std::string s;
 };
 
-BOOST_FUSION_ADAPT_STRUCT(test_struct_two, d, i, b)
+// BOOST_FUSION_ADAPT_STRUCT(test_struct_two, d, i, b)
+
+BOOST_FUSION_ADAPT_STRUCT(test_struct_two, 
+  (double, d)
+  (int, i)
+  (bool, b))
+
 
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
 
