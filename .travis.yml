@@ -8,10 +8,13 @@ compiler:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq gdb
+  - sudo apt-get install -qq boost
 
 script:
   - echo ${COMPILER}
   - echo ${CXX}
   - $CXX --version
-  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_weak_ref.cpp
+  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_visit_struct.cpp
+  - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
+  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I/usr/include test_visit_struct_boost.cpp
   - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
