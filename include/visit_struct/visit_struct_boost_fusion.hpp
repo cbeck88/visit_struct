@@ -6,7 +6,7 @@
 #ifndef VISIT_STRUCT_BOOST_FUSION_HPP_INCLUDED
 #define VISIT_STRUCT_BOOST_FUSION_HPP_INCLUDED
 
-#include <visit_struct.hpp>
+#include <visit_struct/visit_struct.hpp>
 
 #include <boost/mpl/range_c.hpp>
 #include <boost/fusion/include/for_each.hpp>

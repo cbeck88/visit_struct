@@ -1,4 +1,4 @@
-#include <visit_struct.hpp>
+#include <visit_struct/visit_struct.hpp>
 
 #include <cassert>
 #include <iostream>

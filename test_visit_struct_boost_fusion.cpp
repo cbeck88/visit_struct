@@ -1,4 +1,4 @@
-#include <visit_struct_boost_fusion.hpp>
+#include <visit_struct/visit_struct_boost_fusion.hpp>
 
 #include <cassert>
 #include <iostream>
