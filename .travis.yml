@@ -22,6 +22,7 @@ install:
   - cd boost
   - pwd
   - ls
+  - ls boost/mpl/range_c.hpp
 
   - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost
 
