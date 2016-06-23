@@ -8,7 +8,25 @@ compiler:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq gdb
-  - sudo apt-get install -qq libboost-dev
+
+install:
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - BOOST_VERSION=1.60.0
+  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+
+  - if [[ "${BOOST_VERSION}" == "default" ]]; then BOOST_VERSION=1.60.0; fi
+
+  - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
+
+  - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
+  - if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi
+
+#  - cd boost/tools/build && ./bootstrap.sh && ./b2 install --prefix=${DEPS_DIR}/b2
+#  - export PATH=${DEPS_DIR}/b2/bin:${PATH}
+
+  - cd ${TRAVIS_BUILD_DIR}
+  - pwd
+  - ls
 
 script:
   - echo ${COMPILER}
@@ -16,5 +34,5 @@ script:
   - $CXX --version
   - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. test_visit_struct.cpp
   - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
-  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I/usr/include test_visit_struct_boost_fusion.cpp
+  - $CXX -std=c++11 -Wall -Werror -Wextra -pedantic-errors -I. -I${DEPS_DIR} test_visit_struct_boost_fusion.cpp
   - gdb -batch -ex "run" -ex "thread apply all bt" -ex "quit" --args ./a.out
