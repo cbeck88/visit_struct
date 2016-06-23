@@ -15,6 +15,8 @@
 #include <utility>
 #include <type_traits>
 
+#define CXX14_CONSTEXPR
+
 namespace visit_struct {
 
 namespace traits {
@@ -36,7 +38,7 @@ struct is_visitable< T,
 
 // Interface
 template <typename S, typename V>
-constexpr auto apply_visitor(V && v, S && s) ->
+CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   typename std::enable_if<
              traits::is_visitable<
                typename std::remove_cv<typename std::remove_reference<S>::type>::type
@@ -98,19 +100,19 @@ namespace traits {                                                              
 template <>                                                                            \
 struct visitable<STRUCT_NAME, void> {                                                  \
   template <typename V>                                                                \
-  constexpr static void apply(V && visitor, STRUCT_NAME & struct_instance)             \
+  CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)       \
   {                                                                                    \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                       \
   }                                                                                    \
                                                                                        \
   template <typename V>                                                                \
-  constexpr static void apply(V && visitor, const STRUCT_NAME & struct_instance)       \
+  CXX14_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance) \
   {                                                                                    \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                       \
   }                                                                                    \
                                                                                        \
   template <typename V>                                                                \
-  constexpr static void apply(V && visitor, STRUCT_NAME && struct_instance)            \
+  CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)      \
   {                                                                                    \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                  \
   }                                                                                    \
