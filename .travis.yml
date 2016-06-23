@@ -19,28 +19,18 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
-    - compiler: clang
-      env: COMPILER=clang++
 
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq gdb libboost-dev
 
-#  Get clang
-  - LLVM_VERSION=3.7.0
-  - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
-  - wget http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-x86_64-linux-gnu-ubuntu-14.04.tar.xz -O $LLVM_ARCHIVE_PATH
-  - mkdir $HOME/clang+llvm
-  - tar xf $LLVM_ARCHIVE_PATH -C $HOME/clang+llvm --strip-components 1
-  - export PATH=$HOME/clang+llvm/bin:$PATH
-  - which clang++
-
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - BOOST_VERSION=1.60.0
   - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
 
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
+
+  - BOOST_VERSION=1.60.0
 
   - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
   - if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi
@@ -58,8 +48,7 @@ script:
   - echo ${COMPILER}
   - echo ${CXX}
   - $CXX --version
-  - if [[ "$COMPILER}" == "g++" ]]; then export NO_CXX14=true; fi
-  - NO_CXX14=${NO_CXX14} ./run_test.sh
+  - ./run_test.sh
 
   - echo "With Boost ${BOOST_VERSION}"
-  - NO_CXX14=${NO_CXX14} BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
+  - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
