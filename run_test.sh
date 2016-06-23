@@ -6,6 +6,8 @@ if [[ "$BOOST_INCLUDE_DIR" == "" ]]; then
   BOOST_INCLUDE_DIR="/usr/include";
 fi
 
+echo ${BOOST_INCLUDE_DIR}
+
 ${CXX} $@ -std=c++11 -I. -Wall -Werror -Wextra -pedantic test_visit_struct.cpp
 ./a.out
 
