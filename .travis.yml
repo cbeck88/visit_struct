@@ -20,27 +20,18 @@ matrix:
             - g++-5
       env: COMPILER=g++-5
     - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-          packages:
-            - clang-3.6
-      env: COMPILER=clang++-3.6
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7
+      env: COMPILER=clang++
 
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq gdb libboost-dev
+
+#  Get clang
+  - wget http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-x86_64-linux-gnu-ubuntu-14.04.tar.xz -O $LLVM_ARCHIVE_PATH
+  - mkdir $HOME/clang+llvm
+  - tar xf $LLVM_ARCHIVE_PATH -C $HOME/clang+llvm --strip-components 1
+  - export PATH=$HOME/clang+llvm/bin:$PATH
+  - which clang++
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
