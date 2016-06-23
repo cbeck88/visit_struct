@@ -81,14 +81,15 @@ void debug_print(const my_type & my_struct) {
 It should be noted that there are already libraries that do this, like `boost::fusion`,
 which does this and much much more.
 
-However, our library is a single-header, header-only library with no external dependencies.
-`visit_struct.hpp` is in total about one hundred lines of code, depending on how you count.
+However, our library can be used as a single-header, header-only library with no external dependencies.
+The core `visit_struct.hpp` is in total about one hundred lines of code, depending on how you count,
+and is fully functional on its own.
 
 `boost::fusion` is fairly complex and also supports many other features like registering the
 member functions. When you need more power, and you also need to support pre-C++11, that
 is what you should use, but for some applications, `visit_struct` is all that you need.
 
-## Integration with `boost`
+## Integration with `boost::fusion`
 
 `visit_struct` also has support code so that it can be used with "fusion-adapted structures".
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
