@@ -27,6 +27,14 @@ matrix:
           packages:
             - g++-4.9
       env: COMPILER=clang++
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env: COMPILER=g++-6 TEST_HANA=true
 
 before_install:
   - sudo apt-get update -qq
@@ -60,3 +68,4 @@ script:
 
   - echo "With Boost ${BOOST_VERSION}"
   - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
+  - if [[ "${TEST_HANA}" == "true" ]]; then ./run_hana_test.sh fi

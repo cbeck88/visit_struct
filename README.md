@@ -87,15 +87,16 @@ That is, if `my_struct` is a const l-value reference, non-const l-value referenc
 reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly.
 
 It should be noted that there are already libraries that permit structure visitation like
-this, such as `boost::fusion`, which does this and much more.
+this, such as `boost::fusion`, which does this and much more. Or `boost::hana`, which is like
+a more modern successor to `boost::fusion` which takes advantage of C++14.
 
 However, our library can be used as a single-header, header-only library with no external dependencies.
 The core `visit_struct.hpp` is in total about one hundred lines of code, depending on how you count,
 and is fully functional on its own.
 
 `boost::fusion` is fairly complex and also supports many other features like registering the
-member functions. When you need more power, and you also need to support pre-C++11, that
-is what you should use, but for some applications, `visit_struct` is all that you need.
+member functions. When you need more power, you need to support pre-C++11, etc., then you should
+graduate to a "real" reflection library. But for some applications, `visit_struct` is all that you need.
 
 **Note:** The macro `VISITABLE_STRUCT` must be used at filescope, an error will occur if it is
 used within a namespace. You can simply include the namespaces as part of the type, e.g.
@@ -104,15 +105,26 @@ used within a namespace. You can simply include the namespaces as part of the ty
 VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 ```
 
-## Integration with `boost::fusion`
+## Compatibility with `boost::fusion`
 
 `visit_struct` also has support code so that it can be used with "fusion-adapted structures".
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
-if you include the extra header `visit_struct_boost_fusion.hpp`.
+if you include the extra header.  
+
+`#include<visit_struct/visit_struct_boost_fusion.hpp>`
+
+This is intended as a compatibility header -- if you decide to move to a more heavy-duty reflection
+library, this header lets you avoid rewriting all your code.
+
+## Compatiblity with `boost::hana`
+
+`visit_struct` also has a similar compatibility header for `boost::hana`.  
+
+`#include<visit_struct/visit_struct_boost_hana.hpp>`
 
 ## "Intrusive" Syntax
 
-A third header is provided, `visit_struct_intrusive.hpp` which permits the following syntax:
+An additional header is provided, `visit_struct_intrusive.hpp` which permits the following syntax:
 
 ```
 
@@ -172,7 +184,7 @@ will be visited, in the order that they are declared.
 The implementation of the "intrusive" version is actually very different from the
 non-intrusive one. In the standard one, a trick with macros is used to iterate over
 a list. In the intrusive one, actually templates are used to iterate over the list.
-It's debateable which is preferable, however, because the second one is more DRY
+It's debatable which is preferable, however, because the second one is more DRY
 (you don't have to repeat the field names), it seems less likely to give gross error
 messages, but overall, the implementation of that one is trickier. The second one
 also does not have the requirement that you jump down to filescope after declaring
@@ -180,7 +192,7 @@ your structure in order to declare it visitable. YMMV, patches welcome :)
 
 ## Compatibility
 
-**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.6`. It has been
+**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
 tested with MSVC 2015 and it works there also. The "intrusive" syntax seems to compile fastest in MSVC,
 based on experiments with the [msvc online compiler](http://webcompiler.cloudapp.net/), I have no idea why
 this might be however.
