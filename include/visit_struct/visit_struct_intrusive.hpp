@@ -102,7 +102,7 @@ static constexpr int maxVisitableRank = 200;
  * The expression is inherently dangerous if you are using it inside the body
  * of a struct -- obviously, it has different values at different points of the
  * structure definition. The "END_VISITABLES" macro is important in that this
- * finalizes the list, typedeffing `decltype(my_function(Rank<200>{})` to some
+ * finalizes the list, typedeffing `decltype(my_function(Rank<200>{}))` to some
  * fixed name in your struct at a specific point in the definition. That
  * typedef can only ultimately have one meaning, no matter where else the name
  * may be used (even implicitly) in your structure definition. That typedef is
