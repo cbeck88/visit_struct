@@ -46,9 +46,10 @@ install:
 
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
 
-  - BOOST_VERSION=1.60.0
+  - BOOST_VERSION=1.61.0
 
   - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
+  - if [[ "${BOOST_VERSION}" == "1.61.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz"; fi
   - if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi
 
   - cd boost
