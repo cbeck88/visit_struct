@@ -70,6 +70,44 @@ struct Rank<0> {};
 
 static constexpr int maxVisitableRank = 200;
 
+/***
+ * To create a "compile-time" TypeList whose members are accumulated one-by-one,
+ * the basic idea is to define a function, which takes a `Rank` object, and
+ * whose return type is the type representing the current value of the list.
+ *
+ * That function is not a template function -- it is defined as taking a
+ * particular rank object. Initially, it is defined only for `Rank<0>`.
+ *
+ * To add an element to the list, we define an overload of the function, which
+ * takes the next higher `Rank` as it's argument. It's return value is,
+ * the new value of the list, formed by using `Append_t` with the old value.
+ *
+ * To obtain the current value of the list, we use decltype with the name of the
+ * function, and `Rank<200>`, or some suitably large integer. The C++ standard
+ * specifies that overload resolution is in this case unambiguous and must
+ * select the overload for the "most-derived" type which matches.
+ *
+ * The upshot is that `decltype(my_function(Rank<200>{}))` is a single well-formed
+ * expression, which, because of C++ overload resolution rules, can be a
+ * "mutable" value from the point of view of metaprogramming.
+ *
+ *
+ * Attribution:
+ * I first learned this trick from a stackoverflow post by Roman Perepelitsa:
+ * http://stackoverflow.com/questions/4790721/c-type-registration-at-compile-time-trick
+ *
+ * He attributes it to a talk from Matt Calabrese at BoostCon 2011.
+ *
+ *
+ * The expression is inherently dangerous if you are using it inside the body
+ * of a struct -- obviously, it has different values at different points of the
+ * structure definition. The "END_VISTIABLES" macro is important in that this
+ * finalizes the list, typedeffing `decltype(my_function(Rank<200>{})` to some
+ * fixed name in your struct, which can only ultimately have one meaning,
+ * no matter where else that name may be used (even implicitly) in your
+ * structure definition.
+ */
+
 // A tag inserted into a structure to mark it as visitable
 
 struct intrusive_tag{};
