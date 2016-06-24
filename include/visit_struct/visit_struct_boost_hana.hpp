@@ -20,12 +20,12 @@ struct visitable<S, typename std::enable_if<boost::hana::Struct<S>::value>::type
 {
   template <typename V>
   static void apply(V && v, const S & s) {
-    boost::hana::for_each(s, [&v](const auto & pair) { v(boost::hana::to<char const *>(boost::hana::first(pair)), boost::hana::second(pair)); });
+    boost::hana::for_each(s, [&v](auto && pair) { v(boost::hana::to<char const *>(boost::hana::first(pair)), boost::hana::second(pair)); });
   }
 
   template <typename V>
   static void apply(V && v, S & s) {
-    boost::hana::for_each(s, [&v](auto & pair) { v(boost::hana::to<char const *>(boost::hana::first(pair)), boost::hana::second(pair)); });
+    boost::hana::for_each(s, [&v](auto && pair) { v(boost::hana::to<char const *>(boost::hana::first(pair)), boost::hana::second(pair)); });
   }
 
   template <typename V>
