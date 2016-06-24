@@ -19,6 +19,14 @@ matrix:
           packages:
             - g++-5
       env: COMPILER=g++-5
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env: COMPILER=clang++
 
 before_install:
   - sudo apt-get update -qq

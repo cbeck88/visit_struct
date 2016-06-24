@@ -111,8 +111,11 @@ void debug_print(const T & t) {
  * tests
  */
 
+#include <boost/version.hpp>
+
 int main() {
   std::cerr << __FILE__ << std::endl;
+  std::cerr << "Boost version: "<< BOOST_LIB_VERSION << std::endl;
 
   {
     test_struct_one s{ 5, 7.5f, "asdf" };

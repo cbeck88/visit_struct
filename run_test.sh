@@ -6,13 +6,13 @@ if [[ "$CXX" == "" ]]; then
   CXX="g++";
 fi
 
-echo ${CXX}
+${CXX} --version
 
 if [[ "$BOOST_INCLUDE_DIR" == "" ]]; then
   BOOST_INCLUDE_DIR="/usr/include";
 fi
 
-echo ${BOOST_INCLUDE_DIR}
+echo "Boost Dir: " ${BOOST_INCLUDE_DIR}
 
 ${CXX} $@ -std=c++11 -I./include -Wall -Werror -Wextra -pedantic test_visit_struct.cpp
 ./a.out
