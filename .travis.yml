@@ -68,4 +68,4 @@ script:
 
   - echo "With Boost ${BOOST_VERSION}"
   - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
-  - if [[ "${TEST_HANA}" == "true" ]]; then ./run_hana_test.sh; fi
+  - if [[ "${TEST_HANA}" == "true" ]]; then BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_hana_test.sh; fi
