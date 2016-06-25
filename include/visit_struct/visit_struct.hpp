@@ -89,10 +89,10 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
  */
 
 #define VISIT_STRUCT_MEMBER_HELPER(MEMBER_NAME)                                        \
-  visitor(#MEMBER_NAME, struct_instance.MEMBER_NAME);
+  std::forward<V>(visitor)(#MEMBER_NAME, struct_instance.MEMBER_NAME);
 
 #define VISIT_STRUCT_MEMBER_HELPER_MOVE(MEMBER_NAME)                                   \
-  visitor(#MEMBER_NAME, std::move(struct_instance.MEMBER_NAME));
+  std::forward<V>(visitor)(#MEMBER_NAME, std::move(struct_instance.MEMBER_NAME));
 
 
 // This macro specializes the trait, provides "apply" method which does the work.

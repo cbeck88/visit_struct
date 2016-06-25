@@ -37,11 +37,11 @@ private:
     V visitor;
     T struct_instance;
 
-    explicit helper(V v, T t) : visitor(v), struct_instance(t) {}
+    explicit helper(V v, T t) : visitor(std::forward<V>(v)), struct_instance(t) {}
 
     template <typename Index>
     void operator()(Index) const {
-      visitor(boost::fusion::extension::struct_member_name<S, Index::value>::call(), boost::fusion::at<Index>(struct_instance));
+      std::forward<V>(visitor)(boost::fusion::extension::struct_member_name<S, Index::value>::call(), boost::fusion::at<Index>(struct_instance));
     }
   };
 
@@ -50,11 +50,11 @@ private:
     V visitor;
     T struct_instance;
 
-    explicit helper_rvalue_ref(V v, T t) : visitor(v), struct_instance(std::move(t)) {}
+    explicit helper_rvalue_ref(V v, T t) : visitor(std::forward<V>(v)), struct_instance(std::move(t)) {}
 
     template <typename Index>
     void operator()(Index) const {
-      visitor(boost::fusion::extension::struct_member_name<S, Index::value>::call(), std::move(boost::fusion::at<Index>(struct_instance)));
+      std::forward<V>(visitor)(boost::fusion::extension::struct_member_name<S, Index::value>::call(), std::move(boost::fusion::at<Index>(struct_instance)));
     }
   };
     
@@ -62,21 +62,21 @@ public:
   template <typename V>
   static void apply(V && v, const S & s) {
     typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices; 
-    helper<V, const S &> h{v, s};
+    helper<decltype(std::forward<V>(v)), const S &> h{std::forward<V>(v), s};
     boost::fusion::for_each(Indices(), h);
   }
 
   template <typename V>
   static void apply(V && v, S & s) {
     typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices; 
-    helper<V, S &> h{v, s};
+    helper<decltype(std::forward<V>(v)), S &> h{std::forward<V>(v), s};
     boost::fusion::for_each(Indices(), h);
   }
 
   template <typename V>
   static void apply(V && v, S && s) {
     typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices;
-    helper_rvalue_ref<V, S &&> h{v, std::move(s)};
+    helper_rvalue_ref<decltype(std::forward<V>(v)), S &&> h{std::forward<V>(v), std::move(s)};
     boost::fusion::for_each(Indices(), h);
   }
 

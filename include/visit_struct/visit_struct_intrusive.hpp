@@ -132,7 +132,7 @@ template <typename M>
 struct member_helper {
   template <typename V, typename S>
   VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
-    visitor(M::member_name, M::apply(std::forward<S>(structure_instance)));
+    std::forward<V>(visitor)(M::member_name, M::apply(std::forward<S>(structure_instance)));
   }
 };
 

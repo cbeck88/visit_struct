@@ -82,6 +82,11 @@ struct test_visitor_three {
   void operator()(const char *, int &&) {
     result = 3;
   }
+
+  // Make it non-copyable and non-moveable, apply visitor should still work.
+  test_visitor_three() = default;
+  test_visitor_three(const test_visitor_three &) = delete;
+  test_visitor_three(test_visitor_three &&) = delete;
 };
 
 
