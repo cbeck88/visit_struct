@@ -1,6 +1,11 @@
 sudo: required
 dist: trusty
 language: cpp
+
+cache:
+  directories:
+    - ${TRAVIS_BUILD_DIR}/deps
+
 matrix:
   include:
     - compiler: gcc
@@ -42,17 +47,28 @@ before_install:
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
 
   - BOOST_VERSION=1.61.0
+  - if [[ "${BOOST_VERSION}" == "default" ]]; then BOOST_VERSION=1.60.0; fi;
 
-  - if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi
-  - if [[ "${BOOST_VERSION}" == "1.61.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz"; fi
-  - if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget --quiet -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi
+  - if [[ ! -d ${DEPS_DIR}/boost ]]; then
+      mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR};
 
-  - cd boost
+      if [[ "${BOOST_VERSION}" == "1.60.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.gz"; fi;
+      if [[ "${BOOST_VERSION}" == "1.61.0" ]]; then BOOST_URL="http://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz"; fi;
+      if [[ "${BOOST_URL}" != "" ]]; then mkdir boost && travis_retry wget -O - ${BOOST_URL} | tar --strip-components=1 -xz -C boost; fi;
+
+      cd boost/tools/build && ./bootstrap.sh && ./b2 install --prefix=${DEPS_DIR}/b2;
+      cd ${TRAVIS_BUILD_DIR};
+    fi
+
+#  -  export PATH=${DEPS_DIR}/b2/bin:${PATH}
+#  -  export BOOST_ROOT=${DEPS_DIR}/boost 
+
+  - cd ${DEPS_DIR}/boost
   - pwd
   - ls
   - ls boost/mpl/range_c.hpp

@@ -111,7 +111,7 @@ VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
 if you include the extra header.  
 
-`#include<visit_struct/visit_struct_boost_fusion.hpp>`
+`#include <visit_struct/visit_struct_boost_fusion.hpp>`
 
 This is intended as a compatibility header -- if you decide to move to a more heavy-duty reflection
 library, this header lets you avoid rewriting all your code.
@@ -120,7 +120,7 @@ library, this header lets you avoid rewriting all your code.
 
 `visit_struct` also has a similar compatibility header for `boost::hana`.  
 
-`#include<visit_struct/visit_struct_boost_hana.hpp>`
+`#include <visit_struct/visit_struct_boost_hana.hpp>`
 
 ## "Intrusive" Syntax
 
