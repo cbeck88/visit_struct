@@ -73,7 +73,7 @@ struct debug_printer {
   void operator()(const char * name, const T & value) {
     std::cerr << name << ": " << value << std::endl;
   }
-}
+};
 
 void debug_print(const my_type & my_struct) {
   visit_struct::apply_visitor(debug_printer{}, my_struct);
