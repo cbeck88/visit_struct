@@ -1,6 +1,7 @@
 # visit_struct
 
 [![Build Status](https://travis-ci.org/cbeck88/visit_struct.svg?branch=master)](http://travis-ci.org/cbeck88/visit_struct)
+[![Appveyor status](https://ci.appveyor.com/api/projects/status/github/cbeck88/visit_struct?branch=master&svg=true)](https://ci.appveyor.com/project/cbeck88/visit_struct)
 [![Boost licensed](https://img.shields.io/badge/license-Boost-blue.svg)](./LICENSE)
 
 A header-only library for providing **structure visitors** to C++11.
