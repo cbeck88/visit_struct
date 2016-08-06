@@ -33,7 +33,7 @@ install:
         Set-Location "C:\projects\boost_1_61_0"
         Write-Host "Building boost.build.."
         & ".\bootstrap.bat"
-        $env:BOOST_INCLUDE_DIR = "C:\projects\boost_1_61_0"
+        $env:BOOST_ROOT = "C:\projects\boost_1_61_0"
         $env:Path += ";C:\projects\boost_1_61_0;"
         Set-Location "C:\projects\visit_struct"
         Write-Host "Building test executables"
