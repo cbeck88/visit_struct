@@ -68,7 +68,7 @@ struct Rank : Rank<N - 1> {};
 template <>
 struct Rank<0> {};
 
-static constexpr int maxVisitableRank = 200;
+static constexpr int maxVisitableRank = 100;
 
 /***
  * To create a "compile-time" TypeList whose members are accumulated one-by-one,
@@ -83,11 +83,11 @@ static constexpr int maxVisitableRank = 200;
  * the new value of the list, formed by using `Append_t` with the old value.
  *
  * To obtain the current value of the list, we use decltype with the name of the
- * function, and `Rank<200>`, or some suitably large integer. The C++ standard
+ * function, and `Rank<100>`, or some suitably large integer. The C++ standard
  * specifies that overload resolution is in this case unambiguous and must
  * select the overload for the "most-derived" type which matches.
  *
- * The upshot is that `decltype(my_function(Rank<200>{}))` is a single well-formed
+ * The upshot is that `decltype(my_function(Rank<100>{}))` is a single well-formed
  * expression, which, because of C++ overload resolution rules, can be a
  * "mutable" value from the point of view of metaprogramming.
  *
@@ -102,7 +102,7 @@ static constexpr int maxVisitableRank = 200;
  * The expression is inherently dangerous if you are using it inside the body
  * of a struct -- obviously, it has different values at different points of the
  * structure definition. The "END_VISITABLES" macro is important in that this
- * finalizes the list, typedeffing `decltype(my_function(Rank<200>{}))` to some
+ * finalizes the list, typedeffing `decltype(my_function(Rank<100>{}))` to some
  * fixed name in your struct at a specific point in the definition. That
  * typedef can only ultimately have one meaning, no matter where else the name
  * may be used (even implicitly) in your structure definition. That typedef is

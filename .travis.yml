@@ -15,7 +15,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-      env: COMPILER=g++-4.9
+      env: COMPILER=g++-4.9 BOOST_VERSION=1.61.0
     - compiler: gcc
       addons:
         apt:
@@ -23,7 +23,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-      env: COMPILER=g++-5
+      env: COMPILER=g++-5 BOOST_VERSION=1.61.0
     - compiler: clang
       addons:
         apt:
@@ -31,7 +31,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-      env: COMPILER=clang++
+      env: COMPILER=clang++ BOOST_VERSION=1.61.0
     - compiler: gcc
       addons:
         apt:
@@ -39,7 +39,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
-      env: COMPILER=g++-6 TEST_HANA=true
+      env: COMPILER=g++-6 TEST_HANA=true BOOST_VERSION=1.61.0
 
 before_install:
   - sudo apt-get update -qq
@@ -50,8 +50,6 @@ install:
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
 
   - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
-
-  - BOOST_VERSION=1.61.0
   - if [[ "${BOOST_VERSION}" == "default" ]]; then BOOST_VERSION=1.60.0; fi;
 
   - if [[ ! -d ${DEPS_DIR}/boost ]]; then
@@ -65,8 +63,8 @@ install:
       cd ${TRAVIS_BUILD_DIR};
     fi
 
-#  -  export PATH=${DEPS_DIR}/b2/bin:${PATH}
-#  -  export BOOST_ROOT=${DEPS_DIR}/boost 
+  - export PATH=${DEPS_DIR}/b2/bin:${PATH}
+  - export BOOST_ROOT=${DEPS_DIR}/boost 
 
   - cd ${DEPS_DIR}/boost
   - pwd
@@ -81,8 +79,12 @@ script:
   - echo ${COMPILER}
   - echo ${CXX}
   - $CXX --version
-  - if [[ "${TEST_HANA}" != "true" ]]; then ./run_test.sh; fi
+  - |-
+    JAM="using clang : : ${CXX} ;"
+
+  - cd test
+  - touch project-config.jam
+  - echo "${JAM}" > project-config.jam
 
   - echo "With Boost ${BOOST_VERSION}"
-  - BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_test.sh
-  - if [[ "${TEST_HANA}" == "true" ]]; then BOOST_INCLUDE_DIR=${DEPS_DIR}/boost ./run_hana_test.sh; fi
+  - ./test.sh --toolset=clang

@@ -1,0 +1,59 @@
+project : default-build <optimization>off debug ;
+
+INSTALL_LOC = <location>stage/ ;
+
+### Boost directory
+
+import os ;
+
+local BOOST_ROOT = [ os.environ BOOST_ROOT ] ;
+if $(BOOST_ROOT) {
+  # echo "BOOST_ROOT = '" $(BOOST_ROOT) "'" ;
+  BOOST_INCLUDE_DIR = $(BOOST_ROOT) ;
+} else {
+  echo "BOOST_ROOT variable not set!" ;
+  BOOST_INCLUDE_DIR = "/usr/include" ;
+}
+
+# Try to find boost/version.hpp
+
+if [ GLOB $(BOOST_INCLUDE_DIR)/boost/ : version.hpp ] {
+  echo "Using BOOST_INCLUDE_DIR = '" $(BOOST_INCLUDE_DIR) "'" ;  
+} else {
+  echo "Could not find boost, skipping boost tests" ;
+  BOOST_INCLUDE_DIR = ;
+}
+
+# Check TEST_HANA env variable
+
+local TEST_HANA = [ os.environ TEST_HANA ] ;
+
+### Setup visit_struct target
+
+alias visit_struct : : : : <include>include/  ;
+
+### Setup boost includes
+
+alias boost : : : : <include>$(BOOST_INCLUDE_DIR) ;
+
+### Build tests
+
+# TODO: Work around this on windows
+GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++11" ;
+FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) ;
+
+exe test_visit_struct : test_visit_struct.cpp visit_struct : $(FLAGS) ;
+exe test_visit_struct_intrusive : test_visit_struct_intrusive.cpp visit_struct : $(FLAGS) ;
+exe test_visit_struct_boost_fusion : test_visit_struct_boost_fusion.cpp visit_struct boost : $(FLAGS) ;
+
+install install-bin : test_visit_struct test_visit_struct_intrusive test_visit_struct_boost_fusion : $(INSTALL_LOC) ;
+
+if $(TEST_HANA) {
+
+  GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++14" ;
+  FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) ;
+  exe test_visit_struct_boost_hana : test_visit_struct_boost_hana.cpp visit_struct boost : $(FLAGS) ;
+
+  install install-hana : test_visit_struct_boost_hana : $(INSTALL_LOC) ;
+
+}
