@@ -82,7 +82,6 @@ script:
   - |-
     JAM="using clang : : ${CXX} ;"
 
-  - cd test
   - touch project-config.jam
   - echo "${JAM}" > project-config.jam
 
