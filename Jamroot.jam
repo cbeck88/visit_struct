@@ -40,7 +40,7 @@ alias boost : : : : <include>$(BOOST_INCLUDE_DIR) ;
 
 # TODO: Work around this on windows
 GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++11" ;
-FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) ;
+FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) <toolset>msvc:<warnings-as-errors>"off" ;
 
 exe test_visit_struct : test_visit_struct.cpp visit_struct : $(FLAGS) ;
 exe test_visit_struct_intrusive : test_visit_struct_intrusive.cpp visit_struct : $(FLAGS) ;
@@ -51,7 +51,7 @@ install install-bin : test_visit_struct test_visit_struct_intrusive test_visit_s
 if $(TEST_HANA) {
 
   GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++14" ;
-  FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) ;
+  FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) <toolset>msvc:<warnings-as-errors>"off" ;
   exe test_visit_struct_boost_hana : test_visit_struct_boost_hana.cpp visit_struct boost : $(FLAGS) ;
 
   install install-hana : test_visit_struct_boost_hana : $(INSTALL_LOC) ;
