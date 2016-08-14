@@ -201,3 +201,7 @@ this might be however.
 ## Licensing and Distribution
 
 `visit_struct` is available under the boost software license.
+
+## See also
+
+[map-macro](https://github.com/swansontec/map-macro) from swansontec
