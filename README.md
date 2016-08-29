@@ -194,9 +194,9 @@ your structure in order to declare it visitable. YMMV, patches welcome :)
 ## Compatibility
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
-tested with MSVC 2015 and it works there also. The "intrusive" syntax seems to compile fastest in MSVC,
-based on experiments with the [msvc online compiler](http://webcompiler.cloudapp.net/), I have no idea why
-this might be however.
+tested with MSVC 2015. The "intrusive" syntax works there, but there is a known problem with the
+basic (macro-based) version, caused by an MSVC preprocessor bug. I have attempted to work around
+the bug but have not succeeded yet.
 
 ## Licensing and Distribution
 
