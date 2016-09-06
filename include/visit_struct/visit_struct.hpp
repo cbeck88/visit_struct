@@ -63,23 +63,7 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
  * Takes the name of a macro as first parameter, and then at most 365 additional arguments.
  * Evaluates to produce an invocation of the given macro on each of the arguments.
  * The arguments must be simple identifiers, they cannot contain commas or parentheses.
- *
- * Note: We also incorporate an MSVC workaround described here:
- * http://stackoverflow.com/questions/21869917/visual-studio-va-args-issue
  */
-
-#define VISIT_STRUCT_INDIRECT_EXPAND(m, args) m args
-
-#ifdef _MSC_VER
-
-#define VISIT_STRUCT_PP_MAP_EVAL0(...) __VA_ARGS__
-#define VISIT_STRUCT_PP_MAP_EVAL1(...) VISIT_STRUCT_PP_MAP_EVAL0(VISIT_STRUCT_PP_MAP_EVAL0(VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP_EVAL0, (__VA_ARGS__))))
-#define VISIT_STRUCT_PP_MAP_EVAL2(...) VISIT_STRUCT_PP_MAP_EVAL1(VISIT_STRUCT_PP_MAP_EVAL1(VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP_EVAL1, (__VA_ARGS__))))
-#define VISIT_STRUCT_PP_MAP_EVAL3(...) VISIT_STRUCT_PP_MAP_EVAL2(VISIT_STRUCT_PP_MAP_EVAL2(VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP_EVAL2, (__VA_ARGS__))))
-#define VISIT_STRUCT_PP_MAP_EVAL4(...) VISIT_STRUCT_PP_MAP_EVAL3(VISIT_STRUCT_PP_MAP_EVAL3(VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP_EVAL3, (__VA_ARGS__))))
-#define VISIT_STRUCT_PP_MAP_EVAL(...) VISIT_STRUCT_PP_MAP_EVAL4(VISIT_STRUCT_PP_MAP_EVAL4(VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP_EVAL4, (__VA_ARGS__))))
-
-#else
 
 #define VISIT_STRUCT_PP_MAP_EVAL0(...) __VA_ARGS__
 #define VISIT_STRUCT_PP_MAP_EVAL1(...) VISIT_STRUCT_PP_MAP_EVAL0(VISIT_STRUCT_PP_MAP_EVAL0(VISIT_STRUCT_PP_MAP_EVAL0(__VA_ARGS__)))
@@ -87,8 +71,6 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
 #define VISIT_STRUCT_PP_MAP_EVAL3(...) VISIT_STRUCT_PP_MAP_EVAL2(VISIT_STRUCT_PP_MAP_EVAL2(VISIT_STRUCT_PP_MAP_EVAL2(__VA_ARGS__)))
 #define VISIT_STRUCT_PP_MAP_EVAL4(...) VISIT_STRUCT_PP_MAP_EVAL3(VISIT_STRUCT_PP_MAP_EVAL3(VISIT_STRUCT_PP_MAP_EVAL3(__VA_ARGS__)))
 #define VISIT_STRUCT_PP_MAP_EVAL(...) VISIT_STRUCT_PP_MAP_EVAL4(VISIT_STRUCT_PP_MAP_EVAL4(VISIT_STRUCT_PP_MAP_EVAL4(__VA_ARGS__)))
-
-#endif
 
 #define VISIT_STRUCT_PP_MAP_END(...)
 #define VISIT_STRUCT_PP_MAP_OUT
@@ -101,14 +83,6 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
 #define VISIT_STRUCT_PP_MAP0(f, x, peek, ...) f(x) VISIT_STRUCT_PP_MAP_NEXT(peek, VISIT_STRUCT_PP_MAP1)(f, peek, __VA_ARGS__)
 #define VISIT_STRUCT_PP_MAP1(f, x, peek, ...) f(x) VISIT_STRUCT_PP_MAP_NEXT(peek, VISIT_STRUCT_PP_MAP0)(f, peek, __VA_ARGS__)
 #define VISIT_STRUCT_PP_MAP(f, ...) VISIT_STRUCT_PP_MAP_EVAL(VISIT_STRUCT_PP_MAP1(f, __VA_ARGS__, (), 0))
-
-/***
- * Test of pp mechanism
- */
-
-#define VISIT_STRUCT_TEST_PLUS(X) +X
-
-static_assert(6 == VISIT_STRUCT_PP_MAP(VISIT_STRUCT_TEST_PLUS, 1, 2, 3), "Failed a unit test");
 
 /***
  * VISIT_STRUCT implementation details: 
@@ -132,19 +106,19 @@ struct visitable<STRUCT_NAME, void> {                                           
   template <typename V>                                                                            \
   VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)            \
   {                                                                                                \
-    VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP, (VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__))   \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
   }                                                                                                \
                                                                                                    \
   template <typename V>                                                                            \
   VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance)      \
   {                                                                                                \
-    VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP, (VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__))   \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
   }                                                                                                \
                                                                                                    \
   template <typename V>                                                                            \
   VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)           \
   {                                                                                                \
-    VISIT_STRUCT_INDIRECT_EXPAND(VISIT_STRUCT_PP_MAP, (VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)) \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
   static constexpr bool value = true;                                                              \
