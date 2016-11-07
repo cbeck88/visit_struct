@@ -53,6 +53,19 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   traits::visitable<clean_S>::apply(std::forward<V>(v), std::forward<S>(s));
 }
 
+// Interface
+template <typename S, typename V>
+VISIT_STRUCT_CONSTEXPR auto apply_visitor(V&& v) ->
+  typename std::enable_if<
+             traits::is_visitable<
+               typename std::remove_cv<typename std::remove_reference<S>::type>::type
+             >::value
+           >::type
+{
+  using clean_S = typename std::remove_cv<typename std::remove_reference<S>::type>::type;
+  traits::visitable<clean_S>::apply(std::forward<V>(v));
+}
+
 } // end namespace visit_struct
 
 /***
@@ -94,6 +107,8 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
 #define VISIT_STRUCT_MEMBER_HELPER_MOVE(MEMBER_NAME)                                   \
   std::forward<V>(visitor)(#MEMBER_NAME, std::move(struct_instance.MEMBER_NAME));
 
+#define VISIT_STRUCT_MEMBER_HELPER_TYPE(MEMBER_NAME)                                   \
+  std::forward<V>(visitor)(#MEMBER_NAME, &self_type::MEMBER_NAME);
 
 // This macro specializes the trait, provides "apply" method which does the work.
 
@@ -119,6 +134,12 @@ struct visitable<STRUCT_NAME, void> {                                           
   VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)           \
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                              \
+  }                                                                                                \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CONSTEXPR static void apply(V&& visitor)                                            \
+  {                                                                                                \
+    using self_type = STRUCT_NAME;                                                                 \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
   static constexpr bool value = true;                                                              \

@@ -50,6 +50,26 @@ struct test_visitor_one {
   }
 };
 
+struct test_visitor_type {
+  std::vector<spair> result;
+
+  template <typename C>
+  void operator()(const char* name, int C::*) {
+    result.emplace_back(spair{std::string{name}, "int"});
+  }
+
+  template <typename C>
+  void operator()(const char* name, float C::*) {
+    result.emplace_back(spair{std::string{name}, "float"});
+  }
+
+  template <typename C>
+  void operator()(const char* name, std::string C::*) {
+    result.emplace_back(spair{std::string{name}, "std::string"});
+  }
+
+};
+
 
 
 using ppair = std::pair<const char * , const void *>;
@@ -233,6 +253,20 @@ int main() {
 
     visit_struct::apply_visitor(vis, std::move(s));
     assert(vis.result == 3);
+  }
+
+  // Test move semantics
+  {
+    test_visitor_type vis;
+
+    visit_struct::apply_visitor<test_struct_one>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "a");
+    assert(vis.result[0].second == "int");
+    assert(vis.result[1].first == "b");
+    assert(vis.result[1].second == "float");
+    assert(vis.result[2].first == "c");
+    assert(vis.result[2].second == "std::string");
   }
 
 }
