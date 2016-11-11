@@ -4,7 +4,9 @@
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/github/cbeck88/visit_struct?branch=master&svg=true)](https://ci.appveyor.com/project/cbeck88/visit_struct)
 [![Boost licensed](https://img.shields.io/badge/license-Boost-blue.svg)](./LICENSE)
 
-A header-only library for providing **structure visitors** to C++11.
+A header-only library providing **structure visitors** for C++11.
+
+## Motivation
 
 In C++ there is no built-in way to iterate over the members of a `struct` type.
 
@@ -27,37 +29,84 @@ However, this syntax can never be legal in C++, because when we iterate using a
 for loop, the iterator has a fixed static type, and `member.value` similarly has
 a fixed static type. But the struct member types must be allowed to vary.
 
-The standard way to overcome issues like that (without taking a performance hit)
-is to use the visitor pattern. One could hope that the following kind of syntax
-would be legal:
+The usual way to overcome issues like that (without taking a performance hit)
+is to use the *visitor pattern*. For our purposes, a *visitor* is a generic callable
+object. Suppose our struct looks like this:
 
 ```
+  struct my_type {
+    int a;
+    float b;
+    std::string c;
+  };
+```
 
-struct debug_printer {
-  template <typename T>
-  void operator()(const char * name, const T & value) {
-    std::cerr << name << ": " << value << std::endl;
+and suppose we had a function like this, which calls the visitor `v` once for
+each member of the struct:
+
+```
+  template <typename V>
+  void visit(V && v, const my_type & my_struct) {
+    v("a", my_struct.a);
+    v("b", my_struct.b);
+    v("c", my_struct.c);
   }
-};
-
-
-visit_struct::apply_visitor(debug_printer{}, my_struct);
-
 ```
 
-This could be syntactically valid -- here `visit_struct::apply_visitor` is somewhat
-like `boost::apply_visitor`, taking a binary visitor and applying it to each member
-of the struct in sequence.
+If we have such a function in hand, then we can "simulate" the for-loop in a
+variety of ways. For instance, we can make a template function out of the body
+of the for-loop and use that as a visitor.
+
+```
+template <typename T>
+void log_func(const char * name, const T & value) {
+  std::cerr << name << ": " << value << std::endl;
+}
+
+visit(log_func, my_struct);
+```
+
+Using a template function here means that even though a struct may contain several different types, the compiler
+figures out which function to call at compile-time, and we don't do any run-time polymorphism -- the whole call can
+often be inlined.
+
+If the loop has internal state or "output", we can use a function object (an object which overloads `operator()`) as the visitor,
+and store the state in its members. In C++14 we have generic lambdas, which sometimes makes all this very terse.
+
+For comparison, see also the function `boost::apply_visitor` from the `boost::variant` library,
+which similarly applies a visitor to the value stored within a variant.
+
+So, if we have a template function `visit` for our struct, it may let us simplify a lot of
+code that manipulates that struct.
+
+However, that means we have to define `visit` for every struct we want to use it
+with, and possibly several versions of it, taking `const my_type &`, `my_type &`, `my_type &&`, and so on.
+That's also quite a bit of repetitive code, and the whole point of this is to reduce repetition.
+
+Ideally we would be able to do something more generic, like,
+
+```
+template <typename V, typename S>
+void apply_visitor(V && v, S && s) {
+  for (auto && member : s) {
+    v(member.name, member.value);
+  }
+}
+```
+
+and use this to visit the members of any struct.
 
 However, current versions of C++ lack reflection, which means that it's not possible
 to obtain from a generic class type `T` the list of its members, using templates or
 anything else, even if `T` is a complete type (in which case, the compiler obviously
-knows its members).
+knows its members). If we're lucky we might get something like this in C++20, but right
+way there's no way to actually implement the fully generic `apply_visitor` right now.
 
-This library permits the following syntax:
+## Overview
+
+This library permits the following syntax in a C++11 program:
 
 ```
-
 struct my_type {
   int a;
   float b;
@@ -82,10 +131,38 @@ void debug_print(const my_type & my_struct) {
 
 ```
 
-A nice feature of `visit_struct` is that `visit_struct::apply_visitor` always respects the
+Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
+for your structure.
+
+In C++14 you can do it equivaletly with a lambda like this:
+
+```
+struct my_type {
+  int a;
+  float b;
+  std::string c;
+};
+
+VISITABLE_STRUCT(my_type, a, b, c);
+
+
+
+
+void debug_print(const my_type & my_struct) {
+  visit_struct::apply_visitor(
+    [](const char * name, auto && value) {
+      std::cerr << name << ": " << value << std::endl;
+    }, my_struct);
+}
+
+```
+
+
+A nice feature of `visit_struct` is that `apply_visitor` always respects the
 C++11 value category of it's arguments.
 That is, if `my_struct` is a const l-value reference, non-const l-value reference, or r-value
-reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly.
+reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly,
+and the visitor is also forwarded properly.
 
 It should be noted that there are already libraries that permit structure visitation like
 this, such as `boost::fusion`, which does this and much more. Or `boost::hana`, which is like
@@ -109,7 +186,7 @@ VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 ## Compatibility with `boost::fusion`
 
 `visit_struct` also has support code so that it can be used with "fusion-adapted structures".
-That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct`,
+That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct::apply_visitor`,
 if you include the extra header.  
 
 `#include <visit_struct/visit_struct_boost_fusion.hpp>`
@@ -125,7 +202,7 @@ library, this header lets you avoid rewriting all your code.
 
 ## "Intrusive" Syntax
 
-An additional header is provided, `visit_struct_intrusive.hpp` which permits the following syntax:
+An additional header is provided, `visit_struct_intrusive.hpp` which permits the following alternate syntax:
 
 ```
 
@@ -153,7 +230,7 @@ There are no additional data members defined within the type, although there are
 some "secret" static declarations which are occurring. That's why it's "intrusive".
 There is still no run-time overhead.
 
-Each line above is a separate statement within the body of `my_type` and arbitrary other C++
+Each line above expands to a separate series of declarations within the body of `my_type`, and arbitrary other C++
 declarations may appear between them.
 
 ```
@@ -191,12 +268,61 @@ messages, but overall, the implementation of that one is trickier. The second on
 also does not have the requirement that you jump down to filescope after declaring
 your structure in order to declare it visitable. YMMV, patches welcome :)
 
-## Compatibility
+## Visitation without an instance
+
+Besides iteration over an *instance* of a registered struct, `visit_struct` also
+supports visiting the *definition* of the struct. In this case, instead of passing
+you the field name and the field value within some instance, it passes you the
+field name and the *pointer to member* corresponding to that field.
+
+For instance, the function call
+
+```
+visit_struct::apply_visitor<my_type>(v);
+```
+
+is similar to
+
+```
+v("a", &my_type::a);
+v("b", &my_type::b);
+v("c", &my_type::c);
+```
+
+This is potentially very useful in some situations. For instance, sometimes you want to
+output a diagnostic about the layout of some object, but actually instantiating
+it is complicated or expensive. With this version of `apply_visitor`, you get the names
+and the types of the members, without needing to actually instantiate the object.
+
+This may be especially useful in a C++14 compiler which has proper `constexpr` support.
+In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
+for some nifty metaprogramming purposes -- computing data structures,
+performing tests, constructing function objects, which depend on the layout of your
+structures, at compile-time.
+
+(If you need to make extensive use of this
+however, I recommend you take a good look at `boost::hana` which also has additional
+infrastructure to help with this.)
+
+Much thanks to Jarod42 for this patch.
+
+
+
+
+Note: the compatibility headers for `boost::fusion` and `boost::hana` don't
+currently support this version of `apply_visitor` -- I don't know how to get the pointers-to-members
+like this from `boost::fusion`, and if I understand correctly, it's not likely to be able to get them from `hana`
+because it goes somewhat against the design.
+
+## Compiler Support
+
+**visit_struct** targets C++11 -- you need to have R-value references at least, and for the instrusive syntax, you need
+variadic templates also.
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
 tested with MSVC 2015. The "intrusive" syntax works there, but there is a known problem with the
-basic (macro-based) version, caused by an MSVC preprocessor bug. I have attempted to work around
-the bug but have not succeeded yet.
+basic (macro-based) version, caused by an MSVC preprocessor bug having to do with variadic macros.
+I have attempted to work around the bug, but have not succeeded yet.
 
 ## Licensing and Distribution
 
