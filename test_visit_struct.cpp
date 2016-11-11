@@ -255,7 +255,7 @@ int main() {
     assert(vis.result == 3);
   }
 
-  // Test move semantics
+  // Test visiting with no instance
   {
     test_visitor_type vis;
 

@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace test {
@@ -26,6 +27,34 @@ struct test_visitor_one {
     values.emplace_back(v);
   }
 };
+
+using spair = std::pair<std::string, std::string>;
+
+struct test_visitor_type {
+  std::vector<spair> result;
+
+  template <typename C>
+  void operator()(const char* name, bool C::*) {
+    result.emplace_back(spair{std::string{name}, "bool"});
+  }
+
+  template <typename C>
+  void operator()(const char* name, int C::*) {
+    result.emplace_back(spair{std::string{name}, "int"});
+  }
+
+  template <typename C>
+  void operator()(const char* name, float C::*) {
+    result.emplace_back(spair{std::string{name}, "float"});
+  }
+
+  template <typename C>
+  void operator()(const char* name, std::string C::*) {
+    result.emplace_back(spair{std::string{name}, "std::string"});
+  }
+
+};
+
 
 struct test_visitor_three {
   int result = 0;
@@ -126,5 +155,19 @@ int main() {
 
     visit_struct::apply_visitor(vis, std::move(s));
     assert(vis.result == 3);
+  }
+
+  // Test visitation without an instance
+  {
+    test_visitor_type vis;
+
+    visit_struct::apply_visitor<test::foo>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "b");
+    assert(vis.result[0].second == "bool");
+    assert(vis.result[1].first == "i");
+    assert(vis.result[1].second == "int");
+    assert(vis.result[2].first == "f");
+    assert(vis.result[2].second == "float");
   }
 }

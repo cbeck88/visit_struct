@@ -126,13 +126,21 @@ struct member_ptr_helper {
   static constexpr T & apply(S & s) { return s.*member_ptr; }
   static constexpr const T & apply(const S & s) { return s.*member_ptr; }
   static constexpr T && apply(S && s) { return std::move(s.*member_ptr); }
+
+  static constexpr T S::* get_ptr() { return member_ptr; }
 };
 
+// M should be a member_ptr_helper
 template <typename M>
 struct member_helper {
   template <typename V, typename S>
   VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
     std::forward<V>(visitor)(M::member_name, M::apply(std::forward<S>(structure_instance)));
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor) {
+    std::forward<V>(visitor)(M::member_name, M::get_ptr());
   }
 };
 
@@ -145,13 +153,20 @@ struct structure_helper<TypeList<Ms...>> {
   VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
     // Use parameter pack expansion to force evaluation of the member helper for each member in the list.
     // Inside parens, a comma operator is being used to discard the void value and produce an integer, while
-    // not being an unevaluated context and having the order of evaluation be enforced by the compiler.
+    // not being an unevaluated context. The order of evaluation here is enforced by the compiler.
     // Extra zero at the end is to avoid UB for having a zero-size array.
-    int dummy[] = { (member_helper<Ms>::apply_visitor(std::forward<V>(visitor), std::forward<S>(structure_instance)), 0)..., 0};
+    int dummy[] = {(member_helper<Ms>::apply_visitor(std::forward<V>(visitor), std::forward<S>(structure_instance)), 0)..., 0};
     // Suppress unused warnings, even in case of empty parameter pack
     static_cast<void>(dummy);
     static_cast<void>(visitor);
     static_cast<void>(structure_instance);
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CONSTEXPR static void apply_visitor(V && visitor) {
+    int dummy[] = {(member_helper<Ms>::apply_visitor(std::forward<V>(visitor)), 0)..., 0};
+    static_cast<void>(dummy);
+    static_cast<void>(visitor);
   }
 };
 
@@ -174,9 +189,17 @@ struct visitable <T,
                                          >::type
                  >
 {
+  // Apply to an instance
+  // S should be the same type as T modulo const and reference
   template <typename V, typename S>
   VISIT_STRUCT_CONSTEXPR static void apply(V && v, S && s) {
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v), std::forward<S>(s));
+  }
+
+  // Apply with no instance
+  template <typename V>
+  VISIT_STRUCT_CONSTEXPR static void apply(V && v) {
+    detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v));
   }
 
   static constexpr bool value = true;
