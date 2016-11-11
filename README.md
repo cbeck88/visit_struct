@@ -29,6 +29,8 @@ However, this syntax can never be legal in C++, because when we iterate using a
 for loop, the iterator has a fixed static type, and `member.value` similarly has
 a fixed static type. But the struct member types must be allowed to vary.
 
+## Visitors
+
 The usual way to overcome issues like that (without taking a performance hit)
 is to use the *visitor pattern*. For our purposes, a *visitor* is a generic callable
 object. Suppose our struct looks like this:
@@ -53,8 +55,11 @@ each member of the struct:
   }
 ```
 
-If we have such a function in hand, then we can "simulate" the for-loop in a
-variety of ways. For instance, we can make a template function out of the body
+(For comparison, see also the function `boost::apply_visitor` from the `boost::variant` library,
+which similarly applies a visitor to the value stored within a variant.)
+
+Then we can "simulate" the for-loop that we wanted to write in a variety of ways. For instance, we can
+make a template function out of the body
 of the for-loop and use that as a visitor.
 
 ```
@@ -71,19 +76,18 @@ figures out which function to call at compile-time, and we don't do any run-time
 often be inlined.
 
 If the loop has internal state or "output", we can use a function object (an object which overloads `operator()`) as the visitor,
-and store the state in its members. In C++14 we have generic lambdas, which sometimes makes all this very terse.
+and collect the state in its members. Also in C++14 we have generic lambdas, which sometimes makes all this very terse.
 
-For comparison, see also the function `boost::apply_visitor` from the `boost::variant` library,
-which similarly applies a visitor to the value stored within a variant.
+## Reflection
 
 So, if we have a template function `visit` for our struct, it may let us simplify a lot of
-code that manipulates that struct.
+code that manipulates that struct, and reuse a lot of code for things like logging and serialization across many different structs.
 
-However, that means we have to define `visit` for every struct we want to use it
+However, that means we still have to actually define `visit` for every struct we want to use it
 with, and possibly several versions of it, taking `const my_type &`, `my_type &`, `my_type &&`, and so on.
 That's also quite a bit of repetitive code, and the whole point of this is to reduce repetition.
 
-Ideally we would be able to do something more generic, like,
+Ideally we would be able to do something totally generic, like,
 
 ```
 template <typename V, typename S>
@@ -94,13 +98,13 @@ void apply_visitor(V && v, S && s) {
 }
 ```
 
-and use this to visit the members of any struct.
+where both the visitor and struct are template parameters, and use this to visit the members of any struct.
 
-However, current versions of C++ lack reflection, which means that it's not possible
+Unfortunately, current versions of C++ lack reflection, and it's not possible
 to obtain from a generic class type `T` the list of its members, using templates or
 anything else, even if `T` is a complete type (in which case, the compiler obviously
 knows its members). If we're lucky we might get something like this in C++20, but right
-way there's no way to actually implement the fully generic `apply_visitor` right now.
+now there's no way to actually implement the fully generic `apply_visitor`.
 
 ## Overview
 
@@ -133,30 +137,6 @@ void debug_print(const my_type & my_struct) {
 
 Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
 for your structure.
-
-In C++14 you can do it equivaletly with a lambda like this:
-
-```
-struct my_type {
-  int a;
-  float b;
-  std::string c;
-};
-
-VISITABLE_STRUCT(my_type, a, b, c);
-
-
-
-
-void debug_print(const my_type & my_struct) {
-  visit_struct::apply_visitor(
-    [](const char * name, auto && value) {
-      std::cerr << name << ": " << value << std::endl;
-    }, my_struct);
-}
-
-```
-
 
 A nice feature of `visit_struct` is that `apply_visitor` always respects the
 C++11 value category of it's arguments.
