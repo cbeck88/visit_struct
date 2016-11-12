@@ -111,28 +111,26 @@ now there's no way to actually implement the fully generic `apply_visitor`.
 This library permits the following syntax in a C++11 program:
 
 ```
-struct my_type {
-  int a;
-  float b;
-  std::string c;
-};
+  struct my_type {
+    int a;
+    float b;
+    std::string c;
+  };
 
-VISITABLE_STRUCT(my_type, a, b, c);
-
-
+  VISITABLE_STRUCT(my_type, a, b, c);
 
 
-struct debug_printer {
-  template <typename T>
-  void operator()(const char * name, const T & value) {
-    std::cerr << name << ": " << value << std::endl;
+
+  struct debug_printer {
+    template <typename T>
+    void operator()(const char * name, const T & value) {
+      std::cerr << name << ": " << value << std::endl;
+    }
+  };
+
+  void debug_print(const my_type & my_struct) {
+    visit_struct::apply_visitor(debug_printer{}, my_struct);
   }
-};
-
-void debug_print(const my_type & my_struct) {
-  visit_struct::apply_visitor(debug_printer{}, my_struct);
-}
-
 ```
 
 Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
@@ -188,24 +186,23 @@ library, this header lets you avoid rewriting all your code.
 An additional header is provided, `visit_struct_intrusive.hpp` which permits the following alternate syntax:
 
 ```
-struct my_type {
-  BEGIN_VISITABLES(my_type);
-  VISITABLE(int, a);
-  VISITABLE(float, b);
-  VISITABLE(std::string, c);
-  END_VISITABLES;
-};
-
+  struct my_type {
+    BEGIN_VISITABLES(my_type);
+    VISITABLE(int, a);
+    VISITABLE(float, b);
+    VISITABLE(std::string, c);
+    END_VISITABLES;
+  };
 ```
 
 This declares a structure which is essentially the same as
 
 ```
-struct my_type {
-  int a;
-  float b;
-  std::string c;
-};
+  struct my_type {
+    int a;
+    float b;
+    std::string c;
+  };
 ```
 
 There are no additional data members defined within the type, although there are
@@ -216,26 +213,25 @@ Each line above expands to a separate series of declarations within the body of 
 declarations may appear between them.
 
 ```
-struct my_type {
+  struct my_type {
 
-  int not_visitable;
-  double not_visitable_either;
+    int not_visitable;
+    double not_visitable_either;
 
-  BEGIN_VISITABLES(my_type);
-  VISITABLE(int, a);
-  VISITABLE(float, b);
+    BEGIN_VISITABLES(my_type);
+    VISITABLE(int, a);
+    VISITABLE(float, b);
 
-  typedef std::pair<std::string, std::string> spair;
+    typedef std::pair<std::string, std::string> spair;
 
-  VISITABLE(spair, p);
+    VISITABLE(spair, p);
 
-  void do_nothing() const { }
+    void do_nothing() const { }
 
-  VISITABLE(std::string, c);
+    VISITABLE(std::string, c);
 
-  END_VISITABLES;
-};
-
+    END_VISITABLES;
+  };
 ```
 
 When `visit_struct::apply_visitor` is used, each member declared with `VISITABLE`
@@ -282,16 +278,12 @@ for some nifty metaprogramming purposes -- computing data structures,
 performing tests, constructing function objects, which depend on the layout of your
 structures, at compile-time.
 
-(If you need to make extensive use of this
-however, I recommend you take a good look at `boost::hana` which also has additional
-infrastructure to help with this.)
-
 Much thanks to Jarod42 for this patch.
 
 
 
 
-Note: the compatibility headers for `boost::fusion` and `boost::hana` don't
+**Note:** The compatibility headers for `boost::fusion` and `boost::hana` don't
 currently support this version of `apply_visitor` -- I don't know how to get the pointers-to-members
 like this from `boost::fusion`, and if I understand correctly, it's not likely to be able to get them from `hana`
 because it goes somewhat against the design.
