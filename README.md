@@ -138,6 +138,9 @@ void debug_print(const my_type & my_struct) {
 Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
 for your structure.
 
+These two things, the macro `VISITABLE_STRUCT` and the function `visit_struct::apply_visitor`,
+are basically the whole library.
+
 A nice feature of `visit_struct` is that `apply_visitor` always respects the
 C++11 value category of it's arguments.
 That is, if `my_struct` is a const l-value reference, non-const l-value reference, or r-value
