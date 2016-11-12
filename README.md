@@ -63,12 +63,12 @@ make a template function out of the body
 of the for-loop and use that as a visitor.
 
 ```
-template <typename T>
-void log_func(const char * name, const T & value) {
-  std::cerr << name << ": " << value << std::endl;
-}
+  template <typename T>
+  void log_func(const char * name, const T & value) {
+    std::cerr << name << ": " << value << std::endl;
+  }
 
-visit(log_func, my_struct);
+  visit(log_func, my_struct);
 ```
 
 Using a template function here means that even though a struct may contain several different types, the compiler
@@ -90,12 +90,12 @@ That's also quite a bit of repetitive code, and the whole point of this is to re
 Ideally we would be able to do something totally generic, like,
 
 ```
-template <typename V, typename S>
-void apply_visitor(V && v, S && s) {
-  for (auto && member : s) {
-    v(member.name, member.value);
+  template <typename V, typename S>
+  void apply_visitor(V && v, S && s) {
+    for (auto && member : s) {
+      v(member.name, member.value);
+    }
   }
-}
 ```
 
 where both the visitor and struct are template parameters, and use this to visit the members of any struct.
@@ -188,7 +188,6 @@ library, this header lets you avoid rewriting all your code.
 An additional header is provided, `visit_struct_intrusive.hpp` which permits the following alternate syntax:
 
 ```
-
 struct my_type {
   BEGIN_VISITABLES(my_type);
   VISITABLE(int, a);
@@ -261,15 +260,15 @@ field name and the *pointer to member* corresponding to that field.
 For instance, the function call
 
 ```
-visit_struct::apply_visitor<my_type>(v);
+  visit_struct::apply_visitor<my_type>(v);
 ```
 
 is similar to
 
 ```
-v("a", &my_type::a);
-v("b", &my_type::b);
-v("c", &my_type::c);
+  v("a", &my_type::a);
+  v("b", &my_type::b);
+  v("c", &my_type::c);
 ```
 
 This is potentially very useful in some situations. For instance, sometimes you want to
