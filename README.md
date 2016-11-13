@@ -272,7 +272,7 @@ output a diagnostic about the layout of some object, but actually instantiating
 it is complicated or expensive. With this version of `apply_visitor`, you get the names
 and the types of the members, without needing to actually instantiate the object.
 
-This may be especially useful in a C++14 compiler which has proper `constexpr` support.
+This may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
 In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
 for some nifty metaprogramming purposes -- computing data structures,
 performing tests, constructing function objects, which depend on the layout of your
