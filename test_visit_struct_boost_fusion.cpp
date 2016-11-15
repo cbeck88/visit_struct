@@ -101,15 +101,15 @@ struct test_visitor_three {
 struct debug_printer {
   template <typename T>
   void operator()(const char * name, const T & t) const {
-    std::cerr << "  " << name << ": " << t << std::endl;
+    std::cout << "  " << name << ": " << t << std::endl;
   }
 };
 
 template <typename T>
 void debug_print(const T & t) {
-  std::cerr << "{\n";
+  std::cout << "{\n";
   visit_struct::apply_visitor(debug_printer{}, t);
-  std::cerr << "}" << std::endl;
+  std::cout << "}" << std::endl;
 }
 
 /***
@@ -119,8 +119,8 @@ void debug_print(const T & t) {
 #include <boost/version.hpp>
 
 int main() {
-  std::cerr << __FILE__ << std::endl;
-  std::cerr << "Boost version: "<< BOOST_LIB_VERSION << std::endl;
+  std::cout << __FILE__ << std::endl;
+  std::cout << "Boost version: "<< BOOST_LIB_VERSION << std::endl;
 
   {
     test_struct_one s{ 5, 7.5f, "asdf" };
