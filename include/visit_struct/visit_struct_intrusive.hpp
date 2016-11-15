@@ -118,8 +118,22 @@ struct intrusive_tag{};
  * Helper structures which perform pack expansion in order to visit a structure.
  */
 
-// In MSVC 2015, a pointer to member cannot be constexpr, however it can be a
-// template parameter. This is a workaround.
+// In MSVC 2015, sometimes a pointer to member cannot be constexpr, for instance
+// I had trouble with code like this:
+//
+// struct S {
+//   int a;
+//   static constexpr auto a_ptr = &S::a;
+// };
+//
+// This works fine in gcc and clang.
+// MSVC is okay with it if instead it is a template parameter it seems, so we
+// use `member_ptr_helper` below as a workaround, a bit like so:
+//
+// struct S {
+//   int a;
+//   using a_helper = member_ptr_helper<S, int, &S::a>;
+// };
 
 template <typename S, typename T, T S::*member_ptr>
 struct member_ptr_helper {
