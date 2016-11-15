@@ -15,10 +15,13 @@
 #include <utility>
 #include <type_traits>
 
+// After C++14 some more functions, notable apply_visitor, can be constexpr.
+// We target C++11, but such functions are tagged VISIT_STRUCT_CXX14_CONSTEXPR.
+
 # if (defined _MSC_VER) || (!defined __cplusplus) || (__cplusplus == 201103L)
-#   define VISIT_STRUCT_CONSTEXPR
+#   define VISIT_STRUCT_CXX14_CONSTEXPR
 # else
-#   define VISIT_STRUCT_CONSTEXPR constexpr
+#   define VISIT_STRUCT_CXX14_CONSTEXPR constexpr
 # endif
 
 namespace visit_struct {
@@ -42,7 +45,7 @@ struct is_visitable< T,
 
 // Interface
 template <typename S, typename V>
-VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   typename std::enable_if<
              traits::is_visitable<
                typename std::remove_cv<typename std::remove_reference<S>::type>::type
@@ -55,7 +58,7 @@ VISIT_STRUCT_CONSTEXPR auto apply_visitor(V && v, S && s) ->
 
 // Interface
 template <typename S, typename V>
-VISIT_STRUCT_CONSTEXPR auto apply_visitor(V&& v) ->
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V&& v) ->
   typename std::enable_if<
              traits::is_visitable<
                typename std::remove_cv<typename std::remove_reference<S>::type>::type
@@ -207,24 +210,24 @@ namespace traits {                                                              
 template <>                                                                                        \
 struct visitable<STRUCT_NAME, void> {                                                              \
   template <typename V>                                                                            \
-  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME & struct_instance)      \
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
   }                                                                                                \
                                                                                                    \
   template <typename V>                                                                            \
-  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance)      \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, const STRUCT_NAME & struct_instance)\
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
   }                                                                                                \
                                                                                                    \
   template <typename V>                                                                            \
-  VISIT_STRUCT_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)           \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, STRUCT_NAME && struct_instance)     \
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_MOVE, __VA_ARGS__)                              \
   }                                                                                                \
   template <typename V>                                                                            \
-  VISIT_STRUCT_CONSTEXPR static void apply(V&& visitor)                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V&& visitor)                                      \
   {                                                                                                \
     using self_type = STRUCT_NAME;                                                                 \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
