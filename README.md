@@ -154,7 +154,7 @@ this, such as `boost::fusion`, which does this and much more. Or `boost::hana`, 
 a more modern successor to `boost::fusion` which takes advantage of C++14.
 
 However, our library can be used as a single-header, header-only library with no external dependencies.
-The core `visit_struct.hpp` is in total about one hundred lines of code, depending on how you count,
+The core `visit_struct.hpp` is in total about two hundred lines of code, depending on how you count,
 and is fully functional on its own.
 
 `boost::fusion` is fairly complex and also supports many other features like registering the
@@ -292,15 +292,29 @@ currently support this version of `apply_visitor` -- I don't know how to get the
 like this from `boost::fusion`, and if I understand correctly, it's not likely to be able to get them from `hana`
 because it goes somewhat against the design.
 
+## Limits
+
+Whether you use the basic (macro-based) or the intrusive (template-based) syntax, either of them requires somehow
+iterating over a list at compile-time in some sense. In both cases, arbitrarily large lists can't be handled,
+there are some limits imposed by our implementation, and also your C++ compiler.
+
+In the case of the macro version, for technical reasons we pick an arbitrary maximum. This value can be queried,
+it is declared as a `static constexpr int` named `visit_struct::max_visitable_members`. It can be increased but the default is 69.
+
+In the case of the template version, if your struct has `n` visitable elements, that requires template recursion
+depth at least `n` to handle, and again for technical reasons an explicit maximum must be declared in the source.
+This maximum can also be increased, the default is 100. It is declared as a `static constexpr int` named `visit_struct::max_visitable_members_intrusive`.
+
+For extended discussion of these limits, check out the source comments and also the file [IMPLEMENTATION_NOTES.md](/IMPLEMENTATION_NOTES.md).
+
 ## Compiler Support
 
-**visit_struct** targets C++11 -- you need to have r-value references at least, and for the instrusive syntax, you need
+**visit_struct** targets C++11 -- you need to have r-value references at least, and for the intrusive syntax, you need
 variadic templates also.
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
-tested with MSVC 2015. The "intrusive" syntax works there, but there is a known problem with the
-basic (macro-based) version, caused by an MSVC preprocessor bug having to do with variadic macros.
-I have attempted to work around the bug, but have not succeeded yet.
+tested with MSVC 2015. The "intrusive" syntax has always worked there. In the past there was a bug in the basic syntax related to the
+msvc preprocessor, but since recent patches it may now be working, it is not confirmed yet.
 
 ## Licensing and Distribution
 

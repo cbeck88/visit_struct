@@ -68,7 +68,7 @@ struct Rank : Rank<N - 1> {};
 template <>
 struct Rank<0> {};
 
-static constexpr int maxVisitableRank = 100;
+static constexpr int max_visitable_members_intrusive = 100;
 
 /***
  * To create a "compile-time" TypeList whose members are accumulated one-by-one,
@@ -211,7 +211,7 @@ struct visitable <T,
 
 // Macros to be used within a structure definition
 
-#define VISIT_STRUCT_GET_REGISTERED_MEMBERS decltype(Visit_Struct_Get_Visitables__(::visit_struct::detail::Rank<visit_struct::detail::maxVisitableRank>{}))
+#define VISIT_STRUCT_GET_REGISTERED_MEMBERS decltype(Visit_Struct_Get_Visitables__(::visit_struct::detail::Rank<visit_struct::detail::max_visitable_members_intrusive>{}))
 
 #define VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) Visit_Struct_Member_Record__##NAME
 
