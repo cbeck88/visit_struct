@@ -294,18 +294,13 @@ because it goes somewhat against the design.
 
 ## Limits
 
-Whether you use the basic (macro-based) or the intrusive (template-based) syntax, either of them requires somehow
-iterating over a list at compile-time in some sense. In both cases, arbitrarily large lists can't be handled,
-there are some limits imposed by our implementation, and also your C++ compiler.
+When using `VISITABLE_STRUCT`, the maximum number of members which can be registered
+is `visit_struct::max_visitable_members`, which is by default 69.
 
-In the case of the macro version, for technical reasons we pick an arbitrary maximum. This value can be queried,
-it is declared as a `static constexpr int` named `visit_struct::max_visitable_members`. It can be increased but the default is 69.
+When using the intrusive syntax, the maximum number of members is `visit_struct::max_visitable_members_intrusive`,
+which is by default 100.
 
-In the case of the template version, if your struct has `n` visitable elements, that requires template recursion
-depth at least `n` to handle, and again for technical reasons an explicit maximum must be declared in the source.
-This maximum can also be increased, the default is 100. It is declared as a `static constexpr int` named `visit_struct::max_visitable_members_intrusive`.
-
-For extended discussion of these limits, check out the source comments and also the file [IMPLEMENTATION_NOTES.md](/IMPLEMENTATION_NOTES.md).
+These limits can both be increased, see the source comments and also [IMPLEMENTATION_NOTES.md](/IMPLEMENTATION_NOTES.md).
 
 ## Compiler Support
 
