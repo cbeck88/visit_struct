@@ -73,21 +73,25 @@ of the for-loop and use that as a visitor.
 
 Using a template function here means that even though a struct may contain several different types, the compiler
 figures out which function to call at compile-time, and we don't do any run-time polymorphism -- the whole call can
-often be inlined.
+often be inlined. Basically we are solving the original problem in a very exact way -- there is no longer an explicit
+iterator, and each time the "loop body" can be instantiated with different types as needed.
 
 If the loop has internal state or "output", we can use a function object (an object which overloads `operator()`) as the visitor,
 and collect the state in its members. Also in C++14 we have generic lambdas, which sometimes makes all this very terse.
 
+Additionally, while making a visitor is sometimes more verbose than a single for-loop, it has an added benefit that generic visitors can
+be used and reused many times. Often, when doing things like logging or serialization, you don't want each struct to get a different
+implementation or policy, you want to reuse the same code for all of them.
+
 ## Reflection
 
-So, if we have a template function `visit` for our struct, it may let us simplify a lot of
-code that manipulates that struct, and reuse a lot of code for things like logging and serialization across many different structs.
+So, if we have a template function `visit` for our struct, it may let us simplify code and promote code reuse.
 
 However, that means we still have to actually define `visit` for every struct we want to use it
 with, and possibly several versions of it, taking `const my_type &`, `my_type &`, `my_type &&`, and so on.
 That's also quite a bit of repetitive code, and the whole point of this is to reduce repetition.
 
-Ideally we would be able to do something totally generic, like,
+Again, ideally we would be able to do something totally generic, like,
 
 ```
   template <typename V, typename S>
@@ -100,9 +104,9 @@ Ideally we would be able to do something totally generic, like,
 
 where both the visitor and struct are template parameters, and use this to visit the members of any struct.
 
-Unfortunately, current versions of C++ lack reflection, and it's not possible
-to obtain from a generic class type `T` the list of its members, using templates or
-anything else, even if `T` is a complete type (in which case, the compiler obviously
+Unfortunately, current versions of C++ *lack reflection*. It's not possible
+to *programmatically inspect* the list of members of a generic class type `S`, using templates or
+anything else standard, even if `S` is a complete type (in which case, the compiler obviously
 knows its members). If we're lucky we might get something like this in C++20, but right
 now there's no way to actually implement the fully generic `apply_visitor`.
 
@@ -166,7 +170,7 @@ VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 
 ## Compatibility with `boost::fusion`
 
-`visit_struct` also has support code so that it can be used with "fusion-adapted structures".
+**visit_struct** also has support code so that it can be used with "fusion-adapted structures".
 That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct::apply_visitor`,
 if you include the extra header.  
 
@@ -177,7 +181,7 @@ library, this header lets you avoid rewriting all your code.
 
 ## Compatiblity with `boost::hana`
 
-`visit_struct` also has a similar compatibility header for `boost::hana`.  
+**visit_struct** also has a similar compatibility header for `boost::hana`.  
 
 `#include <visit_struct/visit_struct_boost_hana.hpp>`
 
@@ -248,7 +252,7 @@ your structure in order to declare it visitable. YMMV, patches welcome :)
 
 ## Visitation without an instance
 
-Besides iteration over an *instance* of a registered struct, `visit_struct` also
+Besides iteration over an *instance* of a registered struct, **visit_struct** also
 supports visiting the *definition* of the struct. In this case, instead of passing
 you the field name and the field value within some instance, it passes you the
 field name and the *pointer to member* corresponding to that field.
@@ -290,7 +294,7 @@ because it goes somewhat against the design.
 
 ## Compiler Support
 
-**visit_struct** targets C++11 -- you need to have R-value references at least, and for the instrusive syntax, you need
+**visit_struct** targets C++11 -- you need to have r-value references at least, and for the instrusive syntax, you need
 variadic templates also.
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
@@ -300,7 +304,7 @@ I have attempted to work around the bug, but have not succeeded yet.
 
 ## Licensing and Distribution
 
-`visit_struct` is available under the boost software license.
+**visit_struct** is available under the boost software license.
 
 ## See also
 
