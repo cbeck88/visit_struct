@@ -22,16 +22,25 @@ branches:
 
 build: off
 
+cache:
+  - C:\projects\boost_1_61_0.zip
+
 install:
   - ps: >-
       If($true) {
         Add-Type -assembly "system.io.compression.filesystem"
-        Write-Host "Downloading boost..."
-        (new-object net.webclient).DownloadFile("https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip", "C:\projects\boost_1_61_0.zip")
+
+        If(Test-Path C:\projects\boost_1_61_0.zip) {
+          Write-Host "Found cached boost"
+        } Else {
+          Write-Host "Downloading boost..."
+          (new-object net.webclient).DownloadFile("https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip", "C:\projects\boost_1_61_0.zip")
+        }
+
         Write-Host "Extracting boost..."
         [io.compression.zipfile]::ExtractToDirectory("C:\projects\boost_1_61_0.zip", "C:\projects\")
         Set-Location "C:\projects\boost_1_61_0"
-        Write-Host "Building boost.build.."
+        Write-Host "Bootstrapping..."
         & ".\bootstrap.bat"
         $env:BOOST_ROOT = "C:\projects\boost_1_61_0"
         $env:Path += ";C:\projects\boost_1_61_0;"
