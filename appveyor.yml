@@ -22,6 +22,10 @@ branches:
 
 build: off
 
+environment:
+  - BOOST_VER: boost_1_61_0
+  - BOOST_URL: https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip
+
 cache:
   - C:\projects\boost_1_61_0.zip
 
@@ -30,20 +34,26 @@ install:
       If($true) {
         Add-Type -assembly "system.io.compression.filesystem"
 
-        If(Test-Path C:\projects\boost_1_61_0.zip) {
+        boost_path = C:\projects\$env:BOOST_VER
+        boost_zip = $boost_path + ".zip"
+
+        If(Test-Path $boost_zip) {
           Write-Host "Found cached boost"
         } Else {
           Write-Host "Downloading boost..."
-          (new-object net.webclient).DownloadFile("https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip", "C:\projects\boost_1_61_0.zip")
+          (new-object net.webclient).DownloadFile($env:BOOST_URL, $boost_zip)
         }
 
         Write-Host "Extracting boost..."
-        [io.compression.zipfile]::ExtractToDirectory("C:\projects\boost_1_61_0.zip", "C:\projects\")
-        Set-Location "C:\projects\boost_1_61_0"
+        [io.compression.zipfile]::ExtractToDirectory($boost_zip, "C:\projects\")
+
+        Set-Location $boost_path
         Write-Host "Bootstrapping..."
         & ".\bootstrap.bat"
-        $env:BOOST_ROOT = "C:\projects\boost_1_61_0"
-        $env:Path += ";C:\projects\boost_1_61_0;"
+
+        $env:BOOST_ROOT = $boost_path
+        $env:Path += ";" + $boost_path + ";"
+
         Set-Location "C:\projects\visit_struct"
         Write-Host "Building test executables"
         & b2 --toolset=msvc
