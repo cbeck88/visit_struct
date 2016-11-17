@@ -62,12 +62,18 @@ install:
 test_script:
   - ps: >-
       If($true) {
+        $env:Path += ";C:\Program Files (x86)\Windows Kits\8.0\Debuggers\x86\;"
+        $env:Path += ";C:\Program Files (x86)\Windows Kits\8.0\Debuggers\x64\;"
+        $SymPath = "C:\projects\visit_struct\test\stage;SRV*c:\symbols*http://msdl.microsoft.com/download/symbols"
+        
+        cmd /r mkdir c:\symbols
+      
         Write-Host "Running test executables.."
         $files = Get-ChildItem C:\projects\visit_struct\stage\*.exe
         ForEach($file in $files) {
           Write-Host ""
           Write-Host $file.fullName " ... "
-          $file.fullName
+          cdb -y $SymPath -c "|;g;kv;q" -o $file.fullName
           Write-Host "Exit code: " $lastExitCode
         }
       }
