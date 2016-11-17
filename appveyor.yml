@@ -23,8 +23,8 @@ branches:
 build: off
 
 environment:
-  - BOOST_VER: boost_1_61_0
-  - BOOST_URL: https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip
+  - BOOST_VER: "boost_1_61_0"
+  - BOOST_URL: "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip"
 
 cache:
   - C:\projects\boost_1_61_0.zip
