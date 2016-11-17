@@ -34,8 +34,8 @@ install:
       If($true) {
         Add-Type -assembly "system.io.compression.filesystem"
 
-        boost_path = C:\projects\$env:BOOST_VER
-        boost_zip = $boost_path + ".zip"
+        $boost_path = "C:\projects\" + $env:BOOST_VER
+        $boost_zip = $boost_path + ".zip"
 
         If(Test-Path $boost_zip) {
           Write-Host "Found cached boost"
