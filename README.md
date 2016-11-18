@@ -73,13 +73,15 @@ of the for-loop and use that as a visitor.
 
 Using a template function here means that even though a struct may contain several different types, the compiler
 figures out which function to call at compile-time, and we don't do any run-time polymorphism -- the whole call can
-often be inlined. Basically we are solving the original problem in a very exact way -- there is no longer an explicit
+often be inlined.
+
+Basically we are solving the original problem in a very exact way -- there is no longer an explicit
 iterator, and each time the "loop body" can be instantiated with different types as needed.
 
 If the loop has internal state or "output", we can use a function object (an object which overloads `operator()`) as the visitor,
 and collect the state in its members. Also in C++14 we have generic lambdas, which sometimes makes all this very terse.
 
-Additionally, while making a visitor is sometimes more verbose than a single for-loop, it has an added benefit that generic visitors can
+Additionally, while making a visitor is sometimes more verbose than you'd like, it has an added benefit that generic visitors can
 be used and reused many times. Often, when doing things like logging or serialization, you don't want each struct to get a different
 implementation or policy, you want to reuse the same code for all of them.
 
@@ -278,9 +280,7 @@ and the types of the members, without needing to actually instantiate the object
 
 This may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
 In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
-for some nifty metaprogramming purposes -- computing data structures,
-performing tests, constructing function objects, which depend on the layout of your
-structures, at compile-time.
+for some nifty metaprogramming purposes.
 
 Much thanks to Jarod42 for this patch.
 
@@ -317,4 +317,6 @@ msvc preprocessor, but since recent patches it may now be working, it is not con
 
 ## See also
 
-[map-macro](https://github.com/swansontec/map-macro) from swansontec
+* [map-macro](https://github.com/swansontec/map-macro) from swansontec
+* [boost-hana](http://www.boost.org/doc/libs/1_61_0/libs/hana/doc/html/index.html) from ldionne
+* [pod flat reflection](https://github.com/apolukhin/magic_get) from apolukhin
