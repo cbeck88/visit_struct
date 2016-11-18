@@ -80,7 +80,7 @@ public:
     boost::fusion::for_each(Indices(), h);
   }
 
-  static constexpr bool value = true;
+  static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 
 } // end namespace traits

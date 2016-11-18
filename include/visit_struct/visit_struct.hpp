@@ -15,6 +15,14 @@
 #include <utility>
 #include <type_traits>
 
+// For MSVC 2013 support, we put constexpr behind a define.
+
+# if (defined _MSC_VER) && (_MSC_VER <= 1800)
+#   define VISIT_STRUCT_CONSTEXPR
+# else
+#   define VISIT_STRUCT_CONSTEXPR constexpr
+# endif
+
 // After C++14 some more functions, notable apply_visitor, can be constexpr.
 // We target C++11, but such functions are tagged VISIT_STRUCT_CXX14_CONSTEXPR.
 
@@ -233,7 +241,7 @@ struct visitable<STRUCT_NAME, void> {                                           
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
-  static constexpr bool value = true;                                                              \
+  static VISIT_STRUCT_CONSTEXPR bool value = true;                                                 \
 };                                                                                                 \
                                                                                                    \
 }                                                                                                  \

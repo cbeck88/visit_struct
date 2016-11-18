@@ -305,11 +305,14 @@ These limits can both be increased, see the source comments and also [IMPLEMENTA
 ## Compiler Support
 
 **visit_struct** targets C++11 -- you need to have r-value references at least, and for the intrusive syntax, you need
-variadic templates also.
+variadic templates also, and I believe basic `constexpr` support.
 
-**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`. It has been
-tested with MSVC 2015. The "intrusive" syntax has always worked there. In the past there was a bug in the basic syntax related to the
-msvc preprocessor, but since recent patches it may now be working, it is not confirmed yet.
+**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`.
+
+The appveyor build tests against MSVC 2015, it is believed to be fully supported.
+
+For MSVC 2013, the basic syntax is supported, but I don't believe the intrusive syntax can work without `constexpr` support.
+Again, patches welcome.
 
 ## Licensing and Distribution
 
