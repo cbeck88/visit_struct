@@ -288,9 +288,16 @@ Much thanks to Jarod42 for this patch.
 
 
 **Note:** The compatibility headers for `boost::fusion` and `boost::hana` don't
-currently support this version of `apply_visitor` -- I don't know how to get the pointers-to-members
-like this from `boost::fusion`, and if I understand correctly, it's not likely to be able to get them from `hana`
-because it goes somewhat against the design.
+currently support this version of `apply_visitor`.
+
+I don't know how to get the pointers-to-members
+like this from `boost::fusion` -- in [this stackoverflow answer](http://stackoverflow.com/questions/35893937/pointers-to-class-members-when-iterating-with-boostfusion) user `jv_`
+says he doesn't believe it's possible to get those pointers which `fusion` holds internally, and the smart bet is that he's right about such things.
+
+In the case of `hana`, it's not likely to be able to get them
+because it goes somewhat against the design, which views the "`struct` concept" as essentially "sequences of move-invariant values". Internally it represents all structs as tuples, and attempts to abstract away details like pointers to members. See the `hana` documentation for more on this.
+
+If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
 
 ## Limits
 
