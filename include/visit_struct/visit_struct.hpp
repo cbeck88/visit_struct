@@ -241,7 +241,7 @@ struct visitable<STRUCT_NAME, void> {                                           
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
-  static VISIT_STRUCT_CONSTEXPR bool value = true;                                                 \
+  static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
 };                                                                                                 \
                                                                                                    \
 }                                                                                                  \
