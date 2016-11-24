@@ -321,6 +321,8 @@ The appveyor build tests against MSVC 2015, it is believed to be fully supported
 For MSVC 2013, the basic syntax is supported, but I don't believe the intrusive syntax can work without `constexpr` support.
 Again, patches welcome.
 
+Much thanks again to Jarod42 for significant patches related to MSVC support.
+
 ## Licensing and Distribution
 
 **visit_struct** is available under the boost software license.
