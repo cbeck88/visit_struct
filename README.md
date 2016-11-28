@@ -318,7 +318,7 @@ variadic templates also, and I believe basic `constexpr` support.
 
 The appveyor build tests against MSVC 2015, it is believed to be fully supported.
 
-For MSVC 2013, the basic syntax is supported, but I don't believe the intrusive syntax can work without `constexpr` support.
+For MSVC 2013, the basic syntax is supported. I haven't tested the intrusive syntax there.
 Again, patches welcome.
 
 Much thanks again to Jarod42 for significant patches related to MSVC support.

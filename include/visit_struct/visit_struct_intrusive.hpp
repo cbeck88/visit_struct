@@ -68,7 +68,7 @@ struct Rank : Rank<N - 1> {};
 template <>
 struct Rank<0> {};
 
-static constexpr int max_visitable_members_intrusive = 100;
+static VISIT_STRUCT_CONSTEXPR const int max_visitable_members_intrusive = 100;
 
 /***
  * To create a "compile-time" TypeList whose members are accumulated one-by-one,
@@ -137,7 +137,7 @@ struct intrusive_tag{};
 
 template <typename S, typename T, T S::*member_ptr>
 struct member_ptr_helper {
-  static constexpr T S::* get_ptr() { return member_ptr; }
+  static VISIT_STRUCT_CONSTEXPR T S::* get_ptr() { return member_ptr; }
 };
 
 // M should be a member_ptr_helper
@@ -212,7 +212,7 @@ struct visitable <T,
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v));
   }
 
-  static constexpr bool value = true;
+  static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 
 } // end namespace trait
@@ -237,7 +237,7 @@ struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                    
                                           TYPE,                                                                  \
                                           &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
 {                                                                                                                \
-  static constexpr const char * const member_name = #NAME;                                                       \
+  static VISIT_STRUCT_CONSTEXPR const char * const member_name = #NAME;                                          \
 };                                                                                                               \
 static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
                                                VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \
