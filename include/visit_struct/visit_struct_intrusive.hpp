@@ -137,10 +137,6 @@ struct intrusive_tag{};
 
 template <typename S, typename T, T S::*member_ptr>
 struct member_ptr_helper {
-  static constexpr T & apply(S & s) { return s.*member_ptr; }
-  static constexpr const T & apply(const S & s) { return s.*member_ptr; }
-  static constexpr T && apply(S && s) { return std::move(s.*member_ptr); }
-
   static constexpr T S::* get_ptr() { return member_ptr; }
 };
 
@@ -149,7 +145,7 @@ template <typename M>
 struct member_helper {
   template <typename V, typename S>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
-    std::forward<V>(visitor)(M::member_name, M::apply(std::forward<S>(structure_instance)));
+    std::forward<V>(visitor)(M::member_name, std::forward<S>(structure_instance).*M::get_ptr());
   }
 
   template <typename V>
