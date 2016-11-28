@@ -116,7 +116,7 @@ def write_pp_apply_f(n):
 
 writeln("/*** Generated code ***/")
 writeln()
-writeln("static constexpr int max_visitable_members = " + str(args.limit) + ";")
+writeln("static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = " + str(args.limit) + ";")
 
 writeln()
 writeln("#define VISIT_STRUCT_EXPAND(x) x")

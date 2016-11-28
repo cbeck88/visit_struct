@@ -96,7 +96,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V&& v) ->
 
 /*** Generated code ***/
 
-static constexpr int max_visitable_members = 69;
+static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
 
 #define VISIT_STRUCT_EXPAND(x) x
 #define VISIT_STRUCT_PP_ARG_N( \
