@@ -299,6 +299,50 @@ because it goes somewhat against the design, which views the "`struct` concept" 
 
 If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
 
+## Binary Vistation
+
+**visit_struct** also supports visiting two instances of the same struct at once.
+
+The syntax is similar to that of `boost::variant` -- the visitor comes first,
+then two the structure instances.
+
+For instance, the function call
+
+```
+  visit_struct::apply_visitor(v, s1, s2);
+```
+
+is similar to
+
+```
+  v("a", s1.a, s2.a);
+  v("b", s1.b, s2.b);
+  v("c", s1.c, s2.c);
+```
+
+This is useful for implementing generic equality and comparison operators for visitable
+structures, for instance. Here's an example of a generic function `struct_eq` which
+compares any two visitable structures for equality using `operator ==` on each field,
+and which short-circuits properly.
+
+```
+  struct eq_visitor {
+    bool result = true;
+
+    template <typename T>
+    void operator()(const char *, const T & t1, const T & t2) {
+      result = result && (t1 == t2);
+    }
+  };
+
+  template <typename T>
+  bool struct_eq(const T & t1, const T & t2) {
+    eq_visitor vis;
+    visit_struct::apply_visitor(vis, t1, t2);
+    return vis.result;
+  }
+```
+
 ## Limits
 
 When using `VISITABLE_STRUCT`, the maximum number of members which can be registered
