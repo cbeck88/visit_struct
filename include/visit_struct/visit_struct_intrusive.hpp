@@ -41,7 +41,7 @@ namespace detail {
 
 template <class... Ts>
 struct TypeList {
-  static constexpr unsigned int size = sizeof...(Ts);
+  static VISIT_STRUCT_CONSTEXPR const unsigned int size = sizeof...(Ts);
 };
 
 // Append metafunction
