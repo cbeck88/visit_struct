@@ -20,26 +20,27 @@ namespace hana = boost::hana;
 template <typename S>
 struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
 {
-  template <typename V>
-  static void apply(V && v, const S & s) {
-    hana::for_each(hana::keys(s), [&v, &s](auto key) {
-      std::forward<V>(v)(hana::to<char const *>(key), hana::at_key(s, key));
+  // Note: U should be the same as S modulo const and reference, interface
+  // should ensure that
+  template <typename V, typename U>
+  static void apply(V && v, U && u) {
+    hana::for_each(hana::keys(u), [&v, &u](auto key) {
+      std::forward<V>(v)(hana::to<char const *>(key), hana::at_key(std::forward<U>(u), key));
     });
   }
 
-  template <typename V>
-  static void apply(V && v, S & s) {
-    hana::for_each(hana::keys(s), [&v, &s](auto key) {
-      std::forward<V>(v)(hana::to<char const *>(key), hana::at_key(s, key));
+  template <typename V, typename U1, typename U2>
+  static void apply(V && v, U1 && u1, U2 && u2) {
+    // TODO: Is there some way to accomplish "hana::keys<S>()" ?
+    // That doesn't seem to compile for me.
+    // Using `hana::keys(u1)` instead is a small bug.
+    hana::for_each(hana::keys(u1), [&v, &u1, &u2](auto key) {
+      std::forward<V>(v)(hana::to<char const *>(key),
+                         hana::at_key(std::forward<U1>(u1), key),
+                         hana::at_key(std::forward<U2>(u2), key));
     });
   }
 
-  template <typename V>
-  static void apply(V && v, S && s) {
-    hana::for_each(hana::keys(s), [&v, &s](auto key) {
-      std::forward<V>(v)(hana::to<char const *>(key), std::move(hana::at_key(s, key)));
-    });
-  }
 
   static constexpr bool value = true;
 };

@@ -49,33 +49,58 @@ struct is_visitable< T,
                      typename std::enable_if<traits::visitable<T>::value>::type>
  : std::true_type {};
 
+// Helper template which removes cv and reference from a type (saves some typing)
+template <typename T>
+struct clean {
+  typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
+};
+
+template <typename T>
+using clean_t = typename clean<T>::type;
+
+// Mini-version of std::common_type (we only require C++11)
+template <typename T, typename U>
+struct common_type {
+  typedef decltype(true ? std::declval<T>() : std::declval<U>()) type;
+};
+
 } // end namespace traits
 
 // Interface (one instance)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   typename std::enable_if<
-             traits::is_visitable<
-               typename std::remove_cv<typename std::remove_reference<S>::type>::type
-             >::value
+             traits::is_visitable<traits::clean_t<S>>::value
            >::type
 {
-  using clean_S = typename std::remove_cv<typename std::remove_reference<S>::type>::type;
-  traits::visitable<clean_S>::apply(std::forward<V>(v), std::forward<S>(s));
+  traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v), std::forward<S>(s));
 }
 
 // Interface (no instances)
 template <typename S, typename V>
-VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V&& v) ->
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value
+           >::type
+{
+  traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v));
+}
+
+// Interface (two instances)
+template <typename S1, typename S2, typename V>
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
   typename std::enable_if<
              traits::is_visitable<
-               typename std::remove_cv<typename std::remove_reference<S>::type>::type
+               traits::clean_t<typename traits::common_type<S1, S2>::type>
              >::value
            >::type
 {
-  using clean_S = typename std::remove_cv<typename std::remove_reference<S>::type>::type;
-  traits::visitable<clean_S>::apply(std::forward<V>(v));
+  using common_S = typename traits::common_type<S1, S2>::type;
+  traits::visitable<traits::clean_t<common_S>>::apply(std::forward<V>(v),
+                                                      std::forward<S1>(s1),
+                                                      std::forward<S2>(s2));
 }
+
 
 /***
  * To implement the VISITABLE_STRUCTURE macro, we need a map-macro, which can take
@@ -206,9 +231,12 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
 #define VISIT_STRUCT_MEMBER_HELPER_TYPE(MEMBER_NAME)                                               \
   std::forward<V>(visitor)(#MEMBER_NAME, &self_type::MEMBER_NAME);
 
+#define VISIT_STRUCT_MEMBER_HELPER_PAIR(MEMBER_NAME)                                               \
+  std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S1>(s1).MEMBER_NAME, std::forward<S2>(s2).MEMBER_NAME);
+
 // This macro specializes the trait, provides "apply" method which does the work.
-// Below, template parameter S should always be the same as STRUCT_NAME modulo const and reference,
-// the interface defined above ensures that.
+// Below, template parameter S should always be the same as STRUCT_NAME modulo const and reference.
+// The interface defined above ensures that STRUCT_NAME is clean_t<S> basically.
 
 #define VISITABLE_STRUCT(STRUCT_NAME, ...)                                                         \
 namespace visit_struct {                                                                           \
@@ -227,6 +255,12 @@ struct visitable<STRUCT_NAME, void> {                                           
   {                                                                                                \
     using self_type = STRUCT_NAME;                                                                 \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V, typename S1, typename S2>                                                  \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
   static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \

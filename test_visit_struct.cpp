@@ -110,6 +110,43 @@ struct test_visitor_three {
 };
 
 
+// Some binary visitors for test
+
+struct test_eq_visitor {
+  bool result = true;
+
+  template <typename T>
+  void operator()(const char *, const T & t1, const T & t2) {
+    result = result && (t1 == t2);
+  }
+};
+
+struct test_pair_visitor {
+  bool result = false;
+
+  template <typename T>
+  void operator()(const char *, const T &, const T &) {}
+
+  void operator()(const char *, const int & x, const int & y) {
+    result = result || (x > y);
+  }
+};
+
+// Interface for binary visitors
+template <typename T>
+bool struct_eq(const T & t1, const T & t2) {
+  test_eq_visitor vis;
+  visit_struct::apply_visitor(vis, t1, t2);
+  return vis.result;
+}
+
+template <typename T>
+bool struct_int_cmp(const T & t1, const T & t2) {
+  test_pair_visitor vis;
+  visit_struct::apply_visitor(vis, t1, t2);
+  return vis.result;
+}
+
 // debug_print
 
 struct debug_printer {
@@ -269,4 +306,28 @@ int main() {
     assert(vis.result[2].second == "std::string");
   }
 
+  // Test visiting two instances
+  {
+    test_struct_one s1{0, 0, ""};
+    test_struct_one s2{1, 1, "a"};
+    test_struct_one s3{2, 0, ""};
+    test_struct_one s4{3, 4, "b"};
+
+    assert(struct_eq(s1, s1));
+    assert(struct_eq(s2, s2));
+    assert(struct_eq(s3, s3));
+    assert(struct_eq(s4, s4));
+
+    assert(!struct_eq(s1, s2));
+    assert(!struct_eq(s1, s3));
+    assert(!struct_eq(s1, s4));
+    assert(!struct_eq(s2, s3));
+
+    assert(struct_int_cmp(s2, s1));
+    assert(!struct_int_cmp(s1, s2));
+    assert(struct_int_cmp(s3, s1));
+    assert(!struct_int_cmp(s1, s3));
+    assert(struct_int_cmp(s4, s1));
+    assert(!struct_int_cmp(s1, s4));
+  }
 }

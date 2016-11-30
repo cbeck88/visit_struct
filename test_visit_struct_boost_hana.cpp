@@ -99,6 +99,27 @@ struct test_visitor_three {
 };
 
 
+// Test binary visitation
+struct lex_compare_visitor {
+  int result = 0;
+
+  template <typename T>
+  void operator()(const char *, const T & t1, const T & t2) {
+    if (!result) {
+      if (t1 < t2) { result = -1; }
+      else if (t1 > t2) { result = 1; }
+    }
+  }
+};
+
+template <typename T>
+int struct_cmp(const T & t1, const T & t2) {
+  lex_compare_visitor vis;
+  visit_struct::apply_visitor(vis, t1, t2);
+  return vis.result;
+}
+
+
 // debug_print
 
 struct debug_printer {
@@ -245,5 +266,30 @@ int main() {
 
     visit_struct::apply_visitor(vis, std::move(s));
     assert(vis.result == 3);
+  }
+
+  // Test binary visitation
+  {
+    test_struct_one f1{10, 7.5f, "a"};
+    test_struct_one f2{11, 7.5f, "b"};
+
+    assert(0 == struct_cmp(f1, f1));
+    assert(-1 == struct_cmp(f1, f2));
+    assert(0 == struct_cmp(f2, f2));
+    assert(1 == struct_cmp(f2, f1));
+
+    f1.a = 13;
+
+    assert(0 == struct_cmp(f1, f1));
+    assert(1 == struct_cmp(f1, f2));
+    assert(0 == struct_cmp(f2, f2));
+    assert(-1 == struct_cmp(f2, f1));
+
+    f1.a = 11;
+
+    assert(0 == struct_cmp(f1, f1));
+    assert(-1 == struct_cmp(f1, f2));
+    assert(0 == struct_cmp(f2, f2));
+    assert(1 == struct_cmp(f2, f1));
   }
 }
