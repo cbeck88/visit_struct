@@ -1,5 +1,7 @@
 # Operating system (build VM template)
-os: Visual Studio 2015
+os:
+- Visual Studio 2013
+- Visual Studio 2015
 
 # build platform, i.e. Win32 (instead of x86), x64, Any CPU. This setting is optional.
 # platform: 
