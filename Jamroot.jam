@@ -27,6 +27,7 @@ if [ GLOB $(BOOST_INCLUDE_DIR)/boost/ : version.hpp ] {
 # Check TEST_HANA env variable
 
 local TEST_HANA = [ os.environ TEST_HANA ] ;
+local SKIP_INTRUSIVE = [ os.environ SKIP_INTRUSIVE ] ;
 
 ### Setup visit_struct target
 
@@ -43,10 +44,16 @@ GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++11" ;
 FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) <toolset>msvc:<warnings-as-errors>"off" ;
 
 exe test_visit_struct : test_visit_struct.cpp visit_struct : $(FLAGS) ;
-exe test_visit_struct_intrusive : test_visit_struct_intrusive.cpp visit_struct : $(FLAGS) ;
 exe test_visit_struct_boost_fusion : test_visit_struct_boost_fusion.cpp visit_struct boost : $(FLAGS) ;
 
-install install-bin : test_visit_struct test_visit_struct_intrusive test_visit_struct_boost_fusion : $(INSTALL_LOC) ;
+install install-bin : test_visit_struct test_visit_struct_boost_fusion : $(INSTALL_LOC) ;
+
+if $(SKIP_INTRUSIVE) {
+  echo "Skipping intrusive syntax test" ;
+} else {
+  exe test_visit_struct_intrusive : test_visit_struct_intrusive.cpp visit_struct : $(FLAGS) ;
+  install install-intrusive : test_visit_struct_intrusive : $(INSTALL_LOC) ;  
+}
 
 if $(TEST_HANA) {
 
@@ -55,5 +62,4 @@ if $(TEST_HANA) {
   exe test_visit_struct_boost_hana : test_visit_struct_boost_hana.cpp visit_struct boost : $(FLAGS) ;
 
   install install-hana : test_visit_struct_boost_hana : $(INSTALL_LOC) ;
-
 }

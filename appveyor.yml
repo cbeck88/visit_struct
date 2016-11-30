@@ -1,13 +1,3 @@
-# Operating system (build VM template)
-os:
-- Visual Studio 2013
-- Visual Studio 2015
-
-# build platform, i.e. Win32 (instead of x86), x64, Any CPU. This setting is optional.
-# platform: 
-# - Win32
-# - x64
-
 # scripts that are called at very beginning, before repo cloning
 init:
   - git config --global core.autocrlf input
@@ -27,6 +17,11 @@ build: off
 environment:
   BOOST_VER: "boost_1_61_0"
   BOOST_URL: "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip"
+
+  matrix:
+    - os: Visual Studio 2015
+    - os: Visual Studio 2013
+      SKIP_INTRUSIVE: true
 
 cache:
   - C:\projects\boost_1_61_0.zip
