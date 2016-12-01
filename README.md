@@ -378,3 +378,4 @@ Much thanks again to Jarod42 for significant patches related to MSVC support.
 * [map-macro](https://github.com/swansontec/map-macro) from swansontec
 * [boost-hana](http://www.boost.org/doc/libs/1_61_0/libs/hana/doc/html/index.html) from ldionne
 * [pod flat reflection](https://github.com/apolukhin/magic_get) from apolukhin
+* [fit](https://github.com/pfultz2/Fit) from pfultz2 (he illustrates using `fit` for this kind of structure iteration in a [post on reddit](https://www.reddit.com/r/cpp/comments/4pg1rg/visit_struct_a_miniature_reflection_library_for/d4l1k79/))
