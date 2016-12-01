@@ -378,3 +378,4 @@ Much thanks again to Jarod42 for significant patches related to MSVC support.
 * [map-macro](https://github.com/swansontec/map-macro) from swansontec
 * [boost-hana](http://www.boost.org/doc/libs/1_61_0/libs/hana/doc/html/index.html) from ldionne
 * [pod flat reflection](https://github.com/apolukhin/magic_get) from apolukhin
+* [self-aware structs](http://duriansoftware.com/joe/Self-aware-struct-like-types-in-C++11.html) from jckarter
