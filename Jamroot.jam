@@ -60,7 +60,7 @@ if $(TEST_CXX14) {
   GNU_FLAGS = "-Wall -Werror -Wextra -pedantic -std=c++14" ;
   FLAGS = <toolset>gcc:<cxxflags>$(GNU_FLAGS) <toolset>clang:<cxxflags>$(GNU_FLAGS) <toolset>msvc:<warnings-as-errors>"off" ;
   exe test_visit_struct_boost_hana : test_visit_struct_boost_hana.cpp visit_struct boost : $(FLAGS) ;
-  exe test_fully_visitable : test_fully_visitable.cpp visit_sturct : $(FLAGS) ;
+  exe test_fully_visitable : test_fully_visitable.cpp visit_struct : $(FLAGS) ;
 
   install install-hana : test_fully_visitable test_visit_struct_boost_hana : $(INSTALL_LOC) ;
 }
