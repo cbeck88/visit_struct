@@ -280,7 +280,7 @@ and the types of the members, without needing to actually instantiate the object
 
 This may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
 In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
-for some nifty metaprogramming purposes. (For an example, check out [test_fully_registered.cpp](./test_fully_registered.cpp).)
+for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
 
 Much thanks to Jarod42 for this patch.
 
