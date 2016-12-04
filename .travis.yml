@@ -39,7 +39,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
-      env: COMPILER=g++-6 TEST_HANA=true BOOST_VERSION=1.61.0
+      env: COMPILER=g++-6 TEST_CXX14=true BOOST_VERSION=1.61.0
 
 before_install:
   - sudo apt-get update -qq
