@@ -111,7 +111,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
  *
  * But this can also cause it to give worse error messages when something goes wrong.
  *
- * We are now doing it in a more "dumb" brute force way which has the advantage that it is
+ * We are now doing it in a more "dumb", bulletproof way which has the advantage that it is
  * more portable and gives better error messages.
  * For discussion see IMPLEMENTATION_NOTES.md
  *
