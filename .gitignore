@@ -3,3 +3,4 @@ a.out
 *.gch
 /bin
 /stage
+/find_and_replace.sh
