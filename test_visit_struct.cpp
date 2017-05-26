@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -19,6 +20,10 @@ struct test_struct_one {
 VISITABLE_STRUCT(test_struct_one, a, b, c);
 
 static_assert(visit_struct::traits::is_visitable<test_struct_one>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_one>() == 3, "WTF");
+static_assert(visit_struct::field_index<test_struct_one>::a == 0, "WTF");
+static_assert(visit_struct::field_index<test_struct_one>::b == 1, "WTF");
+static_assert(visit_struct::field_index<test_struct_one>::c == 2, "WTF");
 
 struct test_struct_two {
   bool b;
@@ -30,6 +35,10 @@ struct test_struct_two {
 VISITABLE_STRUCT(test_struct_two, d, i, b);
 
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_two>() == 3, "WTF");
+static_assert(visit_struct::field_index<test_struct_two>::d == 0, "WTF");
+static_assert(visit_struct::field_index<test_struct_two>::i == 1, "WTF");
+static_assert(visit_struct::field_index<test_struct_two>::b == 2, "WTF");
 
 /***
  * Test visitors
@@ -47,6 +56,22 @@ struct test_visitor_one {
   template <typename T>
   void operator()(const char * name, const T & t) {
     result.emplace_back(spair{std::string{name}, std::to_string(t)});
+  }
+};
+
+using indexed_result = std::tuple<int, std::string, std::string>;
+
+struct test_visitor_one_indexed {
+  std::vector<indexed_result> result;
+
+  void operator()(int index, const char * name, const std::string & s) {
+    result.emplace_back(indexed_result{index, std::string{name}, s});
+  }
+
+  template <typename T>
+  void operator()(int index, const char * name, const T & t) {
+    result.emplace_back(indexed_result{index, std::string{name},
+                                       std::to_string(t)});
   }
 };
 
@@ -70,6 +95,27 @@ struct test_visitor_type {
 
 };
 
+struct test_visitor_type_indexed {
+  std::vector<indexed_result> result;
+
+  template <typename C>
+  void operator()(int index, const char* name, int C::*) {
+    result.emplace_back(indexed_result{index, std::string{name}, "int"});
+  }
+
+  template <typename C>
+  void operator()(int index, const char* name, float C::*) {
+    result.emplace_back(indexed_result{index, std::string{name}, "float"});
+  }
+
+  template <typename C>
+  void operator()(int index, const char* name, std::string C::*) {
+    result.emplace_back(indexed_result{index, std::string{name},
+                                       "std::string"});
+  }
+
+};
+
 
 
 using ppair = std::pair<const char * , const void *>;
@@ -83,6 +129,20 @@ struct test_visitor_two {
   }
 };
 
+struct test_visitor_two_indexed {
+  std::vector<indexed_result> result;
+
+  void operator()(int index, const char *, const std::string & s1,
+                  const std::string & s2) {
+    result.emplace_back(indexed_result{index, s1, s2});
+  }
+
+  template <typename T>
+  void operator()(int index, const char *, const T & t1, const T & t2) {
+    result.emplace_back(indexed_result{index, std::to_string(t1),
+                                       std::to_string(t2)});
+  }
+};
 
 
 struct test_visitor_three {
@@ -185,6 +245,20 @@ int main() {
     assert(vis1.result[1].second == "7.500000");
     assert(vis1.result[2].first == "c");
     assert(vis1.result[2].second == "asdf");
+
+    test_visitor_one_indexed ivis1;
+    visit_struct::apply_indexed_visitor(ivis1, s);
+
+    assert(ivis1.result.size() == 3);
+    assert(std::get<0>(ivis1.result[0]) == 0);
+    assert(std::get<1>(ivis1.result[0]) == "a");
+    assert(std::get<2>(ivis1.result[0]) == "5");
+    assert(std::get<0>(ivis1.result[1]) == 1);
+    assert(std::get<1>(ivis1.result[1]) == "b");
+    assert(std::get<2>(ivis1.result[1]) == "7.500000");
+    assert(std::get<0>(ivis1.result[2]) == 2);
+    assert(std::get<1>(ivis1.result[2]) == "c");
+    assert(std::get<2>(ivis1.result[2]) == "asdf");
 
     test_visitor_two vis2;
     visit_struct::apply_visitor(vis2, s);
@@ -306,6 +380,22 @@ int main() {
     assert(vis.result[2].second == "std::string");
   }
 
+  {
+    test_visitor_type_indexed ivis;
+
+    visit_struct::apply_indexed_visitor<test_struct_one>(ivis);
+    assert(ivis.result.size() == 3u);
+    assert(std::get<0>(ivis.result[0]) == 0);
+    assert(std::get<1>(ivis.result[0]) == "a");
+    assert(std::get<2>(ivis.result[0]) == "int");
+    assert(std::get<0>(ivis.result[1]) == 1);
+    assert(std::get<1>(ivis.result[1]) == "b");
+    assert(std::get<2>(ivis.result[1]) == "float");
+    assert(std::get<0>(ivis.result[2]) == 2);
+    assert(std::get<1>(ivis.result[2]) == "c");
+    assert(std::get<2>(ivis.result[2]) == "std::string");
+  }
+
   // Test visiting two instances
   {
     test_struct_one s1{0, 0, ""};
@@ -329,5 +419,23 @@ int main() {
     assert(!struct_int_cmp(s1, s3));
     assert(struct_int_cmp(s4, s1));
     assert(!struct_int_cmp(s1, s4));
+  }
+
+  {
+    test_struct_one s1{1, 1, "a"};
+    test_struct_one s2{3, 4, "b"};
+    test_visitor_two_indexed ivis;
+    visit_struct::apply_indexed_visitor(ivis, s1, s2);
+
+    assert(ivis.result.size() == 3);
+    assert(std::get<0>(ivis.result[0]) == 0);
+    assert(std::get<1>(ivis.result[0]) == "1");
+    assert(std::get<2>(ivis.result[0]) == "3");
+    assert(std::get<0>(ivis.result[1]) == 1);
+    assert(std::get<1>(ivis.result[1]) == "1.000000");
+    assert(std::get<2>(ivis.result[1]) == "4.000000");
+    assert(std::get<0>(ivis.result[2]) == 2);
+    assert(std::get<1>(ivis.result[2]) == "a");
+    assert(std::get<2>(ivis.result[2]) == "b");
   }
 }
