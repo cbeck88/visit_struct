@@ -66,6 +66,17 @@ struct common_type {
 
 } // end namespace traits
 
+// Expose number of fields in a visitable struct, and an enum allowing them to
+// be referenced by number.
+template <typename S>
+VISIT_STRUCT_CONSTEXPR std::size_t field_count()
+{
+  return traits::visitable<traits::clean_t<S>>::field_count;
+}
+
+template <typename S>
+using field_index = typename traits::visitable<traits::clean_t<S>>::field_index;
+
 // Interface (one instance)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
@@ -76,6 +87,15 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v), std::forward<S>(s));
 }
 
+template <typename S, typename V>
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_indexed_visitor(V && v, S && s) ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value
+           >::type
+{
+  traits::visitable<traits::clean_t<S>>::apply_indexed(std::forward<V>(v), std::forward<S>(s));
+}
+
 // Interface (no instances)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
@@ -84,6 +104,15 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
            >::type
 {
   traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v));
+}
+
+template <typename S, typename V>
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_indexed_visitor(V && v) ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value
+           >::type
+{
+  traits::visitable<traits::clean_t<S>>::apply_indexed(std::forward<V>(v));
 }
 
 // Interface (two instances)
@@ -99,6 +128,20 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
   traits::visitable<traits::clean_t<common_S>>::apply(std::forward<V>(v),
                                                       std::forward<S1>(s1),
                                                       std::forward<S2>(s2));
+}
+
+template <typename S1, typename S2, typename V>
+VISIT_STRUCT_CXX14_CONSTEXPR auto apply_indexed_visitor(V && v, S1 && s1, S2 && s2) ->
+  typename std::enable_if<
+             traits::is_visitable<
+               traits::clean_t<typename traits::common_type<S1, S2>::type>
+             >::value
+           >::type
+{
+  using common_S = typename traits::common_type<S1, S2>::type;
+  traits::visitable<traits::clean_t<common_S>>::apply_indexed(std::forward<V>(v),
+                                                              std::forward<S1>(s1),
+                                                              std::forward<S2>(s2));
 }
 
 
@@ -225,6 +268,12 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
  * These macros are used with VISIT_STRUCT_PP_MAP
  */
 
+#define VISIT_STRUCT_FIELD_ENUM(MEMBER_NAME)                                                       \
+  MEMBER_NAME,
+
+#define VISIT_STRUCT_FIELD_COUNT(MEMBER_NAME)                                                      \
+  + 1
+
 #define VISIT_STRUCT_MEMBER_HELPER(MEMBER_NAME)                                                    \
   std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S>(struct_instance).MEMBER_NAME);
 
@@ -233,6 +282,17 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
 
 #define VISIT_STRUCT_MEMBER_HELPER_PAIR(MEMBER_NAME)                                               \
   std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S1>(s1).MEMBER_NAME, std::forward<S2>(s2).MEMBER_NAME);
+
+#define VISIT_STRUCT_INDEXED_MEMBER_HELPER(MEMBER_NAME)                                            \
+  std::forward<V>(visitor)(field_index::MEMBER_NAME, #MEMBER_NAME,                                 \
+                           std::forward<S>(struct_instance).MEMBER_NAME);
+
+#define VISIT_STRUCT_INDEXED_MEMBER_HELPER_TYPE(MEMBER_NAME)                                       \
+  std::forward<V>(visitor)(field_index::MEMBER_NAME, #MEMBER_NAME, &self_type::MEMBER_NAME);
+
+#define VISIT_STRUCT_INDEXED_MEMBER_HELPER_PAIR(MEMBER_NAME)                                       \
+  std::forward<V>(visitor)(field_index::MEMBER_NAME, #MEMBER_NAME,                                 \
+                           std::forward<S1>(s1).MEMBER_NAME, std::forward<S2>(s2).MEMBER_NAME);
 
 // This macro specializes the trait, provides "apply" method which does the work.
 // Below, template parameter S should always be the same as STRUCT_NAME modulo const and reference.
@@ -244,6 +304,15 @@ namespace traits {                                                              
                                                                                                    \
 template <>                                                                                        \
 struct visitable<STRUCT_NAME, void> {                                                              \
+  struct field_index {                                                                             \
+    enum index {                                                                                   \
+      VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_ENUM, __VA_ARGS__)                                    \
+    };                                                                                             \
+  };                                                                                               \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
+                                                                                                   \
   template <typename V, typename S>                                                                \
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
   {                                                                                                \
@@ -261,6 +330,25 @@ struct visitable<STRUCT_NAME, void> {                                           
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V, typename S>                                                                \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply_indexed(V && visitor, S && struct_instance)       \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_INDEXED_MEMBER_HELPER, __VA_ARGS__)                           \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply_indexed(V && visitor)                             \
+  {                                                                                                \
+    using self_type = STRUCT_NAME;                                                                 \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_INDEXED_MEMBER_HELPER_TYPE, __VA_ARGS__)                      \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V, typename S1, typename S2>                                                  \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply_indexed(V && visitor, S1 && s1, S2 && s2)         \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_INDEXED_MEMBER_HELPER_PAIR, __VA_ARGS__)                      \
   }                                                                                                \
                                                                                                    \
   static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
