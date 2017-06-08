@@ -19,6 +19,7 @@ struct test_struct_one {
 VISITABLE_STRUCT(test_struct_one, a, b, c);
 
 static_assert(visit_struct::traits::is_visitable<test_struct_one>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_one>() == 3, "WTF");
 
 struct test_struct_two {
   bool b;
@@ -30,6 +31,7 @@ struct test_struct_two {
 VISITABLE_STRUCT(test_struct_two, d, i, b);
 
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_two>() == 3, "WTF");
 
 /***
  * Test visitors
