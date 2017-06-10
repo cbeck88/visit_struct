@@ -66,6 +66,14 @@ struct common_type {
 
 } // end namespace traits
 
+// Expose number of fields in a visitable struct, and an enum allowing them to
+// be referenced by number.
+template <typename S>
+VISIT_STRUCT_CONSTEXPR std::size_t field_count()
+{
+  return traits::visitable<traits::clean_t<S>>::field_count;
+}
+
 // Interface (one instance)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
@@ -100,7 +108,6 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
                                                       std::forward<S1>(s1),
                                                       std::forward<S2>(s2));
 }
-
 
 /***
  * To implement the VISITABLE_STRUCTURE macro, we need a map-macro, which can take
@@ -225,6 +232,9 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
  * These macros are used with VISIT_STRUCT_PP_MAP
  */
 
+#define VISIT_STRUCT_FIELD_COUNT(MEMBER_NAME)                                                      \
+  + 1
+
 #define VISIT_STRUCT_MEMBER_HELPER(MEMBER_NAME)                                                    \
   std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S>(struct_instance).MEMBER_NAME);
 
@@ -244,6 +254,9 @@ namespace traits {                                                              
                                                                                                    \
 template <>                                                                                        \
 struct visitable<STRUCT_NAME, void> {                                                              \
+  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
+                                                                                                   \
   template <typename V, typename S>                                                                \
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
   {                                                                                                \
