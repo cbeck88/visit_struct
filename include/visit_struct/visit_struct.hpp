@@ -25,8 +25,9 @@
 
 // After C++14 some more functions, notable apply_visitor, can be constexpr.
 // We target C++11, but such functions are tagged VISIT_STRUCT_CXX14_CONSTEXPR.
+// Allow extended constexpr in MSVC 2017.
 
-# if (defined _MSC_VER) || (!defined __cplusplus) || (__cplusplus == 201103L)
+# if ((defined _MSC_VER) && (_MSC_VER <= 1900)) || (!defined __cplusplus) || (__cplusplus == 201103L)
 #   define VISIT_STRUCT_CXX14_CONSTEXPR
 # else
 #   define VISIT_STRUCT_CXX14_CONSTEXPR constexpr

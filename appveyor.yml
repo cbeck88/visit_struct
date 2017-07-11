@@ -19,6 +19,7 @@ environment:
   BOOST_URL: "https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.zip"
 
   matrix:
+    - os: Visual Studio 2017
     - os: Visual Studio 2015
     - os: Visual Studio 2013
       SKIP_INTRUSIVE: true
