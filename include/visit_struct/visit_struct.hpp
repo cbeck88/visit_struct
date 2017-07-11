@@ -23,7 +23,7 @@
 #   define VISIT_STRUCT_CONSTEXPR constexpr
 # endif
 
-// After C++14 some more functions, notable apply_visitor, can be constexpr.
+// After C++14 the apply_visitor function can be constexpr.
 // We target C++11, but such functions are tagged VISIT_STRUCT_CXX14_CONSTEXPR.
 //
 // TODO: Tests still fail in appveyor with MSVC 2017, what is the minimum
