@@ -19,10 +19,10 @@ for each one of these, listing the struct members over and over again.
 
 Naively one would like to be able to write something like:
 
-```
-  for (const auto & member : my_struct) {
-    std::cerr << member.name << ": " << member.value << std::endl;
-  }
+```c++
+for (const auto & member : my_struct) {
+  std::cerr << member.name << ": " << member.value << std::endl;
+}
 ```
 
 However, this syntax can never be legal in C++, because when we iterate using a
@@ -35,24 +35,24 @@ The usual way to overcome issues like that (without taking a performance hit)
 is to use the *visitor pattern*. For our purposes, a *visitor* is a generic callable
 object. Suppose our struct looks like this:
 
-```
-  struct my_type {
-    int a;
-    float b;
-    std::string c;
-  };
+```c++
+struct my_type {
+  int a;
+  float b;
+  std::string c;
+};
 ```
 
 and suppose we had a function like this, which calls the visitor `v` once for
 each member of the struct:
 
-```
-  template <typename V>
-  void visit(V && v, const my_type & my_struct) {
-    v("a", my_struct.a);
-    v("b", my_struct.b);
-    v("c", my_struct.c);
-  }
+```c++
+template <typename V>
+void visit(V && v, const my_type & my_struct) {
+  v("a", my_struct.a);
+  v("b", my_struct.b);
+  v("c", my_struct.c);
+}
 ```
 
 (For comparison, see also the function `boost::apply_visitor` from the `boost::variant` library,
@@ -62,13 +62,13 @@ Then we can "simulate" the for-loop that we wanted to write in a variety of ways
 make a template function out of the body
 of the for-loop and use that as a visitor.
 
-```
-  template <typename T>
-  void log_func(const char * name, const T & value) {
-    std::cerr << name << ": " << value << std::endl;
-  }
+```c++
+template <typename T>
+void log_func(const char * name, const T & value) {
+  std::cerr << name << ": " << value << std::endl;
+}
 
-  visit(log_func, my_struct);
+visit(log_func, my_struct);
 ```
 
 Using a template function here means that even though a struct may contain several different types, the compiler
@@ -95,13 +95,13 @@ That's also quite a bit of repetitive code, and the whole point of this is to re
 
 Again, ideally we would be able to do something totally generic, like,
 
-```
-  template <typename V, typename S>
-  void apply_visitor(V && v, S && s) {
-    for (auto && member : s) {
-      v(member.name, member.value);
-    }
+```c++
+template <typename V, typename S>
+void apply_visitor(V && v, S && s) {
+  for (auto && member : s) {
+    v(member.name, member.value);
   }
+}
 ```
 
 where both the visitor and struct are template parameters, and use this to visit the members of any struct.
@@ -116,27 +116,27 @@ now there's no way to actually implement the fully generic `apply_visitor`.
 
 This library permits the following syntax in a C++11 program:
 
-```
-  struct my_type {
-    int a;
-    float b;
-    std::string c;
-  };
+```c++
+struct my_type {
+  int a;
+  float b;
+  std::string c;
+};
 
-  VISITABLE_STRUCT(my_type, a, b, c);
+VISITABLE_STRUCT(my_type, a, b, c);
 
 
 
-  struct debug_printer {
-    template <typename T>
-    void operator()(const char * name, const T & value) {
-      std::cerr << name << ": " << value << std::endl;
-    }
-  };
-
-  void debug_print(const my_type & my_struct) {
-    visit_struct::apply_visitor(debug_printer{}, my_struct);
+struct debug_printer {
+  template <typename T>
+  void operator()(const char * name, const T & value) {
+    std::cerr << name << ": " << value << std::endl;
   }
+};
+
+void debug_print(const my_type & my_struct) {
+  visit_struct::apply_visitor(debug_printer{}, my_struct);
+}
 ```
 
 Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
@@ -166,7 +166,7 @@ graduate to a "real" reflection library. But for some applications, `visit_struc
 **Note:** The macro `VISITABLE_STRUCT` must be used at filescope, an error will occur if it is
 used within a namespace. You can simply include the namespaces as part of the type, e.g.
 
-```
+```c++
 VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 ```
 
@@ -191,24 +191,24 @@ library, this header lets you avoid rewriting all your code.
 
 An additional header is provided, `visit_struct_intrusive.hpp` which permits the following alternate syntax:
 
-```
-  struct my_type {
-    BEGIN_VISITABLES(my_type);
-    VISITABLE(int, a);
-    VISITABLE(float, b);
-    VISITABLE(std::string, c);
-    END_VISITABLES;
-  };
+```c++
+struct my_type {
+  BEGIN_VISITABLES(my_type);
+  VISITABLE(int, a);
+  VISITABLE(float, b);
+  VISITABLE(std::string, c);
+  END_VISITABLES;
+};
 ```
 
 This declares a structure which is essentially the same as
 
-```
-  struct my_type {
-    int a;
-    float b;
-    std::string c;
-  };
+```c++
+struct my_type {
+  int a;
+  float b;
+  std::string c;
+};
 ```
 
 There are no additional data members defined within the type, although there are
@@ -218,26 +218,26 @@ There is still no run-time overhead.
 Each line above expands to a separate series of declarations within the body of `my_type`, and arbitrary other C++
 declarations may appear between them.
 
-```
-  struct my_type {
+```c++
+struct my_type {
 
-    int not_visitable;
-    double not_visitable_either;
+  int not_visitable;
+  double not_visitable_either;
 
-    BEGIN_VISITABLES(my_type);
-    VISITABLE(int, a);
-    VISITABLE(float, b);
+  BEGIN_VISITABLES(my_type);
+  VISITABLE(int, a);
+  VISITABLE(float, b);
 
-    typedef std::pair<std::string, std::string> spair;
+  typedef std::pair<std::string, std::string> spair;
 
-    VISITABLE(spair, p);
+  VISITABLE(spair, p);
 
-    void do_nothing() const { }
+  void do_nothing() const { }
 
-    VISITABLE(std::string, c);
+  VISITABLE(std::string, c);
 
-    END_VISITABLES;
-  };
+  END_VISITABLES;
+};
 ```
 
 When `visit_struct::apply_visitor` is used, each member declared with `VISITABLE`
@@ -261,16 +261,16 @@ field name and the *pointer to member* corresponding to that field.
 
 For instance, the function call
 
-```
-  visit_struct::apply_visitor<my_type>(v);
+```c++
+visit_struct::apply_visitor<my_type>(v);
 ```
 
 is similar to
 
-```
-  v("a", &my_type::a);
-  v("b", &my_type::b);
-  v("c", &my_type::c);
+```c++
+v("a", &my_type::a);
+v("b", &my_type::b);
+v("c", &my_type::c);
 ```
 
 This is potentially very useful in some situations. For instance, sometimes you want to
@@ -308,16 +308,16 @@ then two the structure instances.
 
 For instance, the function call
 
-```
-  visit_struct::apply_visitor(v, s1, s2);
+```c++
+visit_struct::apply_visitor(v, s1, s2);
 ```
 
 is similar to
 
-```
-  v("a", s1.a, s2.a);
-  v("b", s1.b, s2.b);
-  v("c", s1.c, s2.c);
+```c++
+v("a", s1.a, s2.a);
+v("b", s1.b, s2.b);
+v("c", s1.c, s2.c);
 ```
 
 This is useful for implementing generic equality and comparison operators for visitable
@@ -325,22 +325,22 @@ structures, for instance. Here's an example of a generic function `struct_eq` wh
 compares any two visitable structures for equality using `operator ==` on each field,
 and which short-circuits properly.
 
-```
-  struct eq_visitor {
-    bool result = true;
-
-    template <typename T>
-    void operator()(const char *, const T & t1, const T & t2) {
-      result = result && (t1 == t2);
-    }
-  };
+```c++
+struct eq_visitor {
+  bool result = true;
 
   template <typename T>
-  bool struct_eq(const T & t1, const T & t2) {
-    eq_visitor vis;
-    visit_struct::apply_visitor(vis, t1, t2);
-    return vis.result;
+  void operator()(const char *, const T & t1, const T & t2) {
+    result = result && (t1 == t2);
   }
+};
+
+template <typename T>
+bool struct_eq(const T & t1, const T & t2) {
+  eq_visitor vis;
+  visit_struct::apply_visitor(vis, t1, t2);
+  return vis.result;
+}
 ```
 
 ## Limits
