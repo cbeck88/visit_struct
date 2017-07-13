@@ -360,12 +360,18 @@ variadic templates also.
 
 **visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`.
 
-The appveyor build tests against MSVC 2013 and MSVC 2015.
+The appveyor build tests against MSVC 2013, 2015, 2017.
 
 MSVC 2015 is believed to be fully supported.
 
 For MSVC 2013, the basic syntax is supported, the intrusive syntax doesn't work there and now isn't tested.
 Again, patches welcome.
+
+In MSVC 2017, we have enabled all of the "extended constexpr" annotations, and the basic tests compile.
+However, the tests for full C++14 constexpr don't compile. I'm not sure why, or if there is a newer
+version of the compiler where those will work, but I've decided to leave the `constexpr` in the header
+when using MSVC 2017 since it doesn't seem to cause a problem and might be useful to someone.
+Please report a bug if you are using MSVC 2017 and this causes issues.
 
 Much thanks again to Jarod42 for significant patches related to MSVC support.
 
