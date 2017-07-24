@@ -29,6 +29,7 @@ struct test_struct_two {
 };
 
 VISITABLE_STRUCT(test_struct_two, d, i, b);
+// Note the order and that 's' is not registered!
 
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
 static_assert(visit_struct::field_count<test_struct_two>() == 3, "WTF");
@@ -177,6 +178,17 @@ int main() {
 
     debug_print(s);
 
+    // Test getters
+
+    assert(visit_struct::get<0>(s) == 5);
+    assert(visit_struct::get<1>(s) == 7.5f);
+    assert(visit_struct::get<2>(s) == "asdf");
+    assert(visit_struct::get_name<0>(s) == std::string{"a"});
+    assert(visit_struct::get_name<1>(s) == std::string{"b"});
+    assert(visit_struct::get_name<2>(s) == std::string{"c"});
+
+    // Test visitation
+
     test_visitor_one vis1;
     visit_struct::apply_visitor(vis1, s);
 
@@ -196,10 +208,16 @@ int main() {
     assert(vis2.result[1].second == &s.b);
     assert(vis2.result[2].second == &s.c);
 
-
     test_struct_one t{ 0, 0.0f, "jkl" };
 
     debug_print(t);
+
+    assert(visit_struct::get<0>(t) == 0);
+    assert(visit_struct::get<1>(t) == 0.0f);
+    assert(visit_struct::get<2>(t) == "jkl");
+    assert(visit_struct::get_name<0>(t) == std::string{"a"});
+    assert(visit_struct::get_name<1>(t) == std::string{"b"});
+    assert(visit_struct::get_name<2>(t) == std::string{"c"});
 
     test_visitor_one vis3;
     visit_struct::apply_visitor(vis3, t);
@@ -222,13 +240,20 @@ int main() {
     assert(vis4.result[1].second == &t.b);
     assert(vis4.result[2].first == vis2.result[2].first);
     assert(vis4.result[2].second == &t.c);
-
   }
 
   {
     test_struct_two s{ false, 5, -1.0, "foo" };
 
     debug_print(s);
+
+    assert(visit_struct::get<0>(s) == -1.0f);
+    assert(visit_struct::get<1>(s) == 5);
+    assert(visit_struct::get<2>(s) == false);
+    assert(visit_struct::get_name<0>(s) == std::string{"d"});
+    assert(visit_struct::get_name<1>(s) == std::string{"i"});
+    assert(visit_struct::get_name<2>(s) == std::string{"b"});
+
 
     test_visitor_one vis1;
     visit_struct::apply_visitor(vis1, s);
