@@ -8,10 +8,6 @@ clone_folder: C:\projects\visit_struct
 # fetch repository as zip archive
 shallow_clone: true                 # default is "false"
 
-branches:
-  only: 
-   - master
-
 build: off
 
 environment:
