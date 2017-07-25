@@ -28,6 +28,7 @@ struct test_struct_one {
 using dummy::test_struct_one;
 
 static_assert(visit_struct::traits::is_visitable<test_struct_one>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_one>() == 3, "");
 
 struct test_struct_two {
   bool b;
@@ -39,6 +40,7 @@ struct test_struct_two {
 BOOST_HANA_ADAPT_STRUCT(test_struct_two, d, i, b);
 
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
+static_assert(visit_struct::field_count<test_struct_two>() == 3, "");
 
 /***
  * Test visitors

@@ -20,6 +20,8 @@ namespace hana = boost::hana;
 template <typename S>
 struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
 {
+  static constexpr size_t field_count = decltype(hana::length(hana::accessors<S>()))::value;
+
   static constexpr auto get_hana_keys() {
     return hana::transform(hana::accessors<S>(), hana::first);
   }
@@ -41,7 +43,6 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
                          hana::at_key(std::forward<U2>(u2), key));
     });
   }
-
 
   static constexpr bool value = true;
 };
