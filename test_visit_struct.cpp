@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -169,6 +170,13 @@ void debug_print(const T & t) {
 /***
  * tests
  */
+
+static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test_struct_one>())), int>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test_struct_one>())), float>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struct_one>())), std::string>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<0, test_struct_one>()), const char (&)[2]>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<1, test_struct_one>()), const char (&)[2]>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<2, test_struct_one>()), const char (&)[2]>::value, "");
 
 int main() {
   std::cout << __FILE__ << std::endl;

@@ -288,7 +288,7 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
                                                                                                    \
   static VISIT_STRUCT_CONSTEXPR auto                                                               \
     get_name(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                             \
-      const char * {                                                                               \
+      decltype(#MEMBER_NAME) {                                                                     \
     return #MEMBER_NAME;                                                                           \
   }                                                                                                \
 
