@@ -88,6 +88,32 @@ public:
     fusion::for_each(Indices(), h);
   }
 
+  template <int idx>
+  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S & s)
+    -> decltype(fusion::at_c<idx>(s))
+  {
+    return fusion::at_c<idx>(s);
+  }
+
+  template <int idx>
+  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, const S & s)
+    -> decltype(fusion::at_c<idx>(s))
+  {
+    return fusion::at_c<idx>(s);
+  }
+
+  template <int idx>
+  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
+    -> decltype(std::move(fusion::at_c<idx>(s)))
+  {
+    return std::move(fusion::at_c<idx>(s));
+  }
+
+  template <int idx>
+  static VISIT_STRUCT_CXX14_CONSTEXPR const char * get_name(std::integral_constant<int, idx>) {
+    return fusion::extension::struct_member_name<S, idx>::call();
+  }
+
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 

@@ -118,6 +118,19 @@ void debug_print(const T & t) {
  * tests
  */
 
+static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test_struct_one>())), int &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test_struct_one>())), float &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struct_one>())), std::string &&>::value, "");
+
+static_assert(std::is_same<decltype(visit_struct::get_name<0, test_struct_one>()), const char *>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<1, test_struct_one>()), const char *>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<2, test_struct_one>()), const char *>::value, "");
+
+static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test_struct_two>())), double &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test_struct_two>())), int &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struct_two>())), bool &&>::value, "");
+
+
 #include <boost/version.hpp>
 
 int main() {
@@ -128,6 +141,13 @@ int main() {
     test_struct_one s{ 5, 7.5f, "asdf" };
 
     debug_print(s);
+
+    assert(visit_struct::get<0>(s) == 5);
+    assert(visit_struct::get<1>(s) == 7.5f);
+    assert(visit_struct::get<2>(s) == "asdf");
+    assert(visit_struct::get_name<0>(s) == std::string{"a"});
+    assert(visit_struct::get_name<1>(s) == std::string{"b"});
+    assert(visit_struct::get_name<2>(s) == std::string{"c"});
 
     test_visitor_one vis1;
     visit_struct::apply_visitor(vis1, s);
