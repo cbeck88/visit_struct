@@ -21,11 +21,14 @@ namespace visit_struct {
 
 namespace traits {
 
+namespace fusion = boost::fusion;
+namespace mpl = boost::mpl;
+
 template <typename S>
 struct visitable<S,
                  typename std::enable_if<
-                   std::is_same<typename boost::mpl::sequence_tag<S>::type,
-                                boost::fusion::fusion_sequence_tag
+                   std::is_same<typename mpl::sequence_tag<S>::type,
+                                fusion::fusion_sequence_tag
                    >::value
                  >::type>
 {
@@ -41,7 +44,7 @@ private:
 
     template <typename Index>
     void operator()(Index) const {
-      std::forward<V>(visitor)(boost::fusion::extension::struct_member_name<S, Index::value>::call(), boost::fusion::at<Index>(struct_instance));
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), fusion::at<Index>(struct_instance));
     }
   };
 
@@ -54,32 +57,35 @@ private:
 
     template <typename Index>
     void operator()(Index) const {
-      std::forward<V>(visitor)(boost::fusion::extension::struct_member_name<S, Index::value>::call(), std::move(boost::fusion::at<Index>(struct_instance)));
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), std::move(fusion::at<Index>(struct_instance)));
     }
   };
     
 public:
-  static VISIT_STRUCT_CONSTEXPR const size_t field_count = boost::fusion::result_of::size<S>::value;
+  static VISIT_STRUCT_CONSTEXPR const size_t field_count = fusion::result_of::size<S>::value;
 
   template <typename V>
   static void apply(V && v, const S & s) {
-    typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices; 
-    helper<decltype(std::forward<V>(v)), const S &> h{std::forward<V>(v), s};
-    boost::fusion::for_each(Indices(), h);
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using helper_t = helper<decltype(std::forward<V>(v)), const S &>;
+    helper_t h{std::forward<V>(v), s};
+    fusion::for_each(Indices(), h);
   }
 
   template <typename V>
   static void apply(V && v, S & s) {
-    typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices; 
-    helper<decltype(std::forward<V>(v)), S &> h{std::forward<V>(v), s};
-    boost::fusion::for_each(Indices(), h);
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using helper_t = helper<decltype(std::forward<V>(v)), S &>;
+    helper_t h{std::forward<V>(v), s};
+    fusion::for_each(Indices(), h);
   }
 
   template <typename V>
   static void apply(V && v, S && s) {
-    typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices;
-    helper_rvalue_ref<decltype(std::forward<V>(v)), S &&> h{std::forward<V>(v), std::move(s)};
-    boost::fusion::for_each(Indices(), h);
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using helper_t = helper_rvalue_ref<decltype(std::forward<V>(v)), S &&>;
+    helper_t h{std::forward<V>(v), std::move(s)};
+    fusion::for_each(Indices(), h);
   }
 
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
