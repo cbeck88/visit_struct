@@ -59,6 +59,8 @@ private:
   };
     
 public:
+  static VISIT_STRUCT_CONSTEXPR const size_t field_count = boost::fusion::result_of::size<S>::value;
+
   template <typename V>
   static void apply(V && v, const S & s) {
     typedef boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<S>::value > Indices; 
