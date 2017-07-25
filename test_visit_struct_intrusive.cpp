@@ -17,6 +17,8 @@ namespace test {
 
 } // end namespace test
 
+static_assert(visit_struct::field_count<test::foo>() == 3, "");
+
 struct test_visitor_one {
   std::vector<std::string> names;
   std::vector<double> values;

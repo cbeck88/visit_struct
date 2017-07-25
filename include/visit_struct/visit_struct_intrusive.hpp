@@ -215,6 +215,8 @@ struct visitable <T,
                                          >::type
                  >
 {
+  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = T::Visit_Struct_Registered_Members_List__::size;
+
   // Apply to an instance
   // S should be the same type as T modulo const and reference
   template <typename V, typename S>
