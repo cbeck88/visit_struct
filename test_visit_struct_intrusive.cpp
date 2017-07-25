@@ -119,6 +119,16 @@ void debug_print(const T & t) {
   std::cout << "}" << std::endl;
 }
 
+// tests
+
+static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test::foo>())), bool &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test::foo>())), int &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test::foo>())), float &&>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<0, test::foo>()), const char *>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<1, test::foo>()), const char *>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<2, test::foo>()), const char *>::value, "");
+// TODO: get_name should return const char (&)[]
+
 int main() {
   std::cout << __FILE__ << std::endl;
 
@@ -126,6 +136,13 @@ int main() {
     test::foo s{ true, 5, 7.5f };
 
     debug_print(s);
+
+    assert(visit_struct::get<0>(s) == true);
+    assert(visit_struct::get<1>(s) == 5);
+    assert(visit_struct::get<2>(s) == 7.5f);
+    assert(visit_struct::get_name<0>(s) == std::string{"b"});
+    assert(visit_struct::get_name<1>(s) == std::string{"i"});
+    assert(visit_struct::get_name<2>(s) == std::string{"f"});
 
     test_visitor_one vis;
     visit_struct::apply_visitor(vis, s);

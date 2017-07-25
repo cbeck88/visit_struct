@@ -56,6 +56,30 @@ struct Append<TypeList<Ts...>, T> {
 template<class L, class T>
 using Append_t = typename Append<L, T>::type;
 
+// Cdr metafunction (cdr is a lisp function which returns the tail of a list)
+template <class List>
+struct Cdr;
+
+template <typename T, typename... Ts>
+struct Cdr<TypeList<T, Ts...>> {
+  typedef TypeList<Ts...> type;
+};
+
+template <class List>
+using Cdr_t = typename Cdr<List>::type;
+
+// Find metafunction (get the idx'th element)
+template <class List, unsigned idx>
+struct Find : Find<Cdr_t<List>, idx - 1> {};
+
+template <typename T, typename... Ts>
+struct Find<TypeList<T, Ts...>, 0> {
+  typedef T type;
+};
+
+template <class List, unsigned idx>
+using Find_t = typename Find<List, idx>::type;
+
 /***
  * The "rank" template is a trick which can be used for
  * certain metaprogramming techniques. It creates
@@ -140,7 +164,7 @@ struct member_ptr_helper {
   static VISIT_STRUCT_CONSTEXPR T S::* get_ptr() { return member_ptr; }
 };
 
-// M should be a member_ptr_helper
+// M should be derived from a member_ptr_helper
 template <typename M>
 struct member_helper {
   template <typename V, typename S>
@@ -220,20 +244,36 @@ struct visitable <T,
   // Apply to an instance
   // S should be the same type as T modulo const and reference
   template <typename V, typename S>
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && v, S && s) {
+  static VISIT_STRUCT_CXX14_CONSTEXPR void apply(V && v, S && s) {
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v), std::forward<S>(s));
   }
 
   // Apply with two instances
     template <typename V, typename S1, typename S2>
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && v, S1 && s1, S2 && s2) {
+  static VISIT_STRUCT_CXX14_CONSTEXPR void apply(V && v, S1 && s1, S2 && s2) {
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v), std::forward<S1>(s1), std::forward<S2>(s2));
   }
 
   // Apply with no instance
   template <typename V>
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && v) {
+  static VISIT_STRUCT_CXX14_CONSTEXPR void apply(V && v) {
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v));
+  }
+
+  // Get value
+  template <int idx, typename S>
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
+    -> decltype(std::forward<S>(s).*detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr())
+  {
+    return std::forward<S>(s).*detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr();
+  }
+
+  // Get name
+  template <int idx>
+  static VISIT_STRUCT_CONSTEXPR auto get_name(std::integral_constant<int, idx>)
+    -> decltype(detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name)
+  {
+    return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name;
   }
 
   static VISIT_STRUCT_CONSTEXPR const bool value = true;

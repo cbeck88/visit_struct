@@ -174,6 +174,9 @@ void debug_print(const T & t) {
 static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test_struct_one>())), int>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test_struct_one>())), float>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struct_one>())), std::string>::value, "");
+// TODO: ^^ Should these types be int &&, float &&, std::string && ??? Why aren't they? Behavior should be consistent
+// with the intrusive syntax.
+
 static_assert(std::is_same<decltype(visit_struct::get_name<0, test_struct_one>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<1, test_struct_one>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<2, test_struct_one>()), const char (&)[2]>::value, "");
