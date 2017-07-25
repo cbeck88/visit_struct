@@ -66,8 +66,7 @@ struct common_type {
 
 } // end namespace traits
 
-// Expose number of fields in a visitable struct, and an enum allowing them to
-// be referenced by number.
+// Expose number of fields in a visitable struct
 template <typename S>
 VISIT_STRUCT_CONSTEXPR std::size_t field_count()
 {
@@ -110,7 +109,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
 }
 
 /***
- * To implement the VISITABLE_STRUCTURE macro, we need a map-macro, which can take
+ * To implement the VISITABLE_STRUCT macro, we need a map-macro, which can take
  * the name of a macro and some other arguments, and apply that macro to each other argument.
  *
  * There are some techniques you can use within C preprocessor to accomplish this succinctly,
