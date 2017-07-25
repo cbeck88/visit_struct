@@ -17,19 +17,23 @@
 
 // For MSVC 2013 support, we put constexpr behind a define.
 
-# if (defined _MSC_VER) && (_MSC_VER <= 1800)
-#   define VISIT_STRUCT_CONSTEXPR
-# else
-#   define VISIT_STRUCT_CONSTEXPR constexpr
+# ifndef VISIT_STRUCT_CONSTEXPR
+#   if (defined _MSC_VER) && (_MSC_VER <= 1800)
+#     define VISIT_STRUCT_CONSTEXPR
+#   else
+#     define VISIT_STRUCT_CONSTEXPR constexpr
+#   endif
 # endif
 
 // After C++14 the apply_visitor function can be constexpr.
 // We target C++11, but such functions are tagged VISIT_STRUCT_CXX14_CONSTEXPR.
 
-# if ((defined _MSC_VER) && (_MSC_VER <= 1900)) || (!defined __cplusplus) || (__cplusplus == 201103L)
-#   define VISIT_STRUCT_CXX14_CONSTEXPR
-# else
-#   define VISIT_STRUCT_CXX14_CONSTEXPR constexpr
+# ifndef VISIT_STRUCT_CXX14_CONSTEXPR
+#   if ((defined _MSC_VER) && (_MSC_VER <= 1900)) || (!defined __cplusplus) || (__cplusplus == 201103L)
+#     define VISIT_STRUCT_CXX14_CONSTEXPR
+#   else
+#     define VISIT_STRUCT_CXX14_CONSTEXPR constexpr
+#   endif
 # endif
 
 namespace visit_struct {
