@@ -142,6 +142,18 @@ void debug_print(const my_type & my_struct) {
 Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
 for your structure.
 
+In C++14 this can be made more succinct using a lambda:
+
+```c++
+const auto debug_printer = [](const char * name, const auto & value) {
+  std::cerr << name << ": " << value << std::endl;
+};
+
+void debug_print(const my_type & my_struct) {
+  visit_struct::apply_visitor(debug_printer, my_struct);
+}
+```
+
 These two things, the macro `VISITABLE_STRUCT` and the function `visit_struct::apply_visitor`,
 are basically the whole library.
 
@@ -151,17 +163,13 @@ That is, if `my_struct` is a const l-value reference, non-const l-value referenc
 reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly,
 and the visitor is also forwarded properly.
 
-It should be noted that there are already libraries that permit structure visitation like
+It should be noted that there are already libraries that permit iterating over a structure like
 this, such as `boost::fusion`, which does this and much more. Or `boost::hana`, which is like
 a more modern successor to `boost::fusion` which takes advantage of C++14.
 
 However, our library can be used as a single-header, header-only library with no external dependencies.
-The core `visit_struct.hpp` is in total about two hundred lines of code, depending on how you count,
-and is fully functional on its own.
-
-`boost::fusion` is fairly complex and also supports many other features like registering the
-member functions. When you need more power, you need to support pre-C++11, etc., then you should
-graduate to a "real" reflection library. But for some applications, `visit_struct` is all that you need.
+The core `visit_struct.hpp` is in total about three hundred lines of code, depending on how you count,
+and is fully functional on its own. For some applications, `visit_struct` is all that you need.
 
 **Note:** The macro `VISITABLE_STRUCT` must be used at filescope, an error will occur if it is
 used within a namespace. You can simply include the namespaces as part of the type, e.g.
@@ -178,8 +186,8 @@ if you include the extra header.
 
 `#include <visit_struct/visit_struct_boost_fusion.hpp>`
 
-This is intended as a compatibility header -- if you decide to move to a more heavy-duty reflection
-library, this header lets you avoid rewriting all your code.
+This compatability header means that you don't have to register a struct once with `fusion` and once with `visit_struct`.
+It may help if you are migrating from one library to the other.
 
 ## Compatiblity with `boost::hana`
 
@@ -243,14 +251,12 @@ struct my_type {
 When `visit_struct::apply_visitor` is used, each member declared with `VISITABLE`
 will be visited, in the order that they are declared.
 
-The implementation of the "intrusive" version is actually very different from the
-non-intrusive one. In the standard one, a trick with macros is used to iterate over
-a list. In the intrusive one, actually templates are used to iterate over the list.
-It's debatable which is preferable, however, because the second one is more DRY
-(you don't have to repeat the field names), it seems less likely to give gross error
-messages, but overall, the implementation of that one is trickier. The second one
-also does not have the requirement that you jump down to filescope after declaring
-your structure in order to declare it visitable. YMMV, patches welcome :)
+The benefits of this version are that, you don't need to type all the member
+names twice, and you don't need to jump out of your namespaces back to filescope
+in order to register a struct. The main drawbacks are that this is still somewhat
+verbose, the implementation is a bit more complicated, and this one may not be
+useful in some cases, like if the struct you want to visit belongs to some other
+project and you can't change its definition.
 
 ## Visitation without an instance
 
@@ -343,6 +349,41 @@ bool struct_eq(const T & t1, const T & t2) {
 }
 ```
 
+## Tuple Methods
+
+For a long time, `apply_visitor` was the only function in the library. It's quite
+powerful and everything that I needed to do could be done using it comfortably.
+I like having a really small API.
+
+However, one thing that you cannot easily use `apply_visitor` to do is implement `std::tuple`
+methods, like `std::get<i>` to get the `i`'th member of the struct. By contrast, `apply_visitor`
+could be implemented with relative ease in C++11 using `std::get` and variadic templates,
+so arguably this is a more fundamental operation. Indeed, most if not all libraries that support struct-field reflection support this in some way.
+So, we decided it was remiss not to support this also.
+
+We didn't change our implementation of `apply_visitor`, which works well on all targets right now including MSVC 2013.
+But we have added three new functions which allow indexed access to structures.
+
+```c++
+visit_struct::get<i>(struct);
+```
+
+Gets (a reference to) the `i`'th visitable element of the struct. Index is 0-based. Analogous to `std::get`.
+
+```c++
+visit_struct::get_name<i>(struct);
+```
+
+Gets a `const char *` pointing to the name of the `i`'th visitable element of the struct. The struct type may also be passed as a second template parameter
+instead of as an argument.
+
+```c++
+visit_struct::field_count<S>();
+```
+
+Gets a `size_t` which tells how many visitable fields there are.
+
+
 ## Limits
 
 When using `VISITABLE_STRUCT`, the maximum number of members which can be registered
@@ -367,13 +408,34 @@ MSVC 2015 is believed to be fully supported.
 For MSVC 2013, the basic syntax is supported, the intrusive syntax doesn't work there and now isn't tested.
 Again, patches welcome.
 
-In MSVC 2017, we have enabled all of the "extended constexpr" annotations, and the basic tests compile.
-However, the tests for full C++14 constexpr don't compile. I'm not sure why, or if there is a newer
-version of the compiler where those will work, but I've decided to leave the `constexpr` in the header
-when using MSVC 2017 since it doesn't seem to cause a problem and might be useful to someone.
-Please report a bug if you are using MSVC 2017 and this causes issues.
-
 Much thanks again to Jarod42 for significant patches related to MSVC support.
+
+## Constexpr Correctness
+
+`visit_struct` attempts to target three different levels of `constexpr` support.
+
+- No support
+- C++11 support
+- C++14 extended support
+
+This is controlled by two macros `VISIT_STRUCT_CONSTEXPR` and `VISIT_STRUCT_CXX14_CONSTEXPR`. We use these tokens where we would use the `constexpr` keyword.
+
+In the `visit_struct.hpp` header, these macros are defined to either `constexpr` or nothing.
+
+We attempt to guess the appropriate setting by inspecting the preprocessor symbols `__cplusplus` and `_MSC_VER`.
+
+If it doesn't work on your compiler, please open a github issue, especially if you know how to fix it :)
+
+In the meantime, if you don't want to tweak the headers for your project, you can override the behavior by defining these macros yourself, before including `visit_struct.hpp`.
+If the header sees that you have defined them it won't touch them and will defer to your settings. In most cases this should not be necessary.
+
+On gcc and clang, we assume at least C++11 constexpr support. If you enabled a later standard using `-std=...`, we turn on the full `constexpr`.
+
+On MSVC currently the settings are:
+
+- VS2013: no support
+- VS2015: C++11 support
+- VS2017: C++14 extended support
 
 ## Licensing and Distribution
 
