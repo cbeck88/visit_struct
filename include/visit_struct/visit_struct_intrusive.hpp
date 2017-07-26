@@ -301,7 +301,7 @@ struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                    
                                           TYPE,                                                                  \
                                           &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
 {                                                                                                                \
-  static VISIT_STRUCT_CONSTEXPR const char * const member_name = #NAME;                                          \
+  static VISIT_STRUCT_CONSTEXPR decltype(#NAME) member_name = #NAME;                                             \
 };                                                                                                               \
 static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
                                                VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \

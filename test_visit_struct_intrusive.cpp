@@ -124,10 +124,9 @@ void debug_print(const T & t) {
 static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test::foo>())), bool &&>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test::foo>())), int &&>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test::foo>())), float &&>::value, "");
-static_assert(std::is_same<decltype(visit_struct::get_name<0, test::foo>()), const char *>::value, "");
-static_assert(std::is_same<decltype(visit_struct::get_name<1, test::foo>()), const char *>::value, "");
-static_assert(std::is_same<decltype(visit_struct::get_name<2, test::foo>()), const char *>::value, "");
-// TODO: get_name should return const char (&)[]
+static_assert(std::is_same<decltype(visit_struct::get_name<0, test::foo>()), const char (&)[2]>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<1, test::foo>()), const char (&)[2]>::value, "");
+static_assert(std::is_same<decltype(visit_struct::get_name<2, test::foo>()), const char (&)[2]>::value, "");
 
 int main() {
   std::cout << __FILE__ << std::endl;
