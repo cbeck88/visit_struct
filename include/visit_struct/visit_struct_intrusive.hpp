@@ -80,6 +80,11 @@ struct Find<TypeList<T, Ts...>, 0> {
 template <class List, unsigned idx>
 using Find_t = typename Find<List, idx>::type;
 
+// Alias used when capturing references to string literals
+
+template <int N>
+using char_array = const char [N];
+
 /***
  * The "rank" template is a trick which can be used for
  * certain metaprogramming techniques. It creates
@@ -301,7 +306,7 @@ struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                    
                                           TYPE,                                                                  \
                                           &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
 {                                                                                                                \
-  static VISIT_STRUCT_CONSTEXPR decltype(#NAME) member_name = #NAME;                                             \
+  static VISIT_STRUCT_CONSTEXPR const ::visit_struct::detail::char_array<sizeof(#NAME)> & member_name = #NAME;   \
 };                                                                                                               \
 static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
                                                VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \
