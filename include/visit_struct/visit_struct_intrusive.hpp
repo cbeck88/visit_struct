@@ -174,17 +174,17 @@ template <typename M>
 struct member_helper {
   template <typename V, typename S>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor, S && structure_instance) {
-    std::forward<V>(visitor)(M::member_name, std::forward<S>(structure_instance).*M::get_ptr());
+    std::forward<V>(visitor)(M::member_name(), std::forward<S>(structure_instance).*M::get_ptr());
   }
 
   template <typename V>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor) {
-    std::forward<V>(visitor)(M::member_name, M::get_ptr());
+    std::forward<V>(visitor)(M::member_name(), M::get_ptr());
   }
 
   template <typename V, typename S1, typename S2>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor, S1 && s1, S2 && s2) {
-    std::forward<V>(visitor)(M::member_name,
+    std::forward<V>(visitor)(M::member_name(),
                              std::forward<S1>(s1).*M::get_ptr(),
                              std::forward<S2>(s2).*M::get_ptr());
   }
@@ -276,9 +276,9 @@ struct visitable <T,
   // Get name
   template <int idx>
   static VISIT_STRUCT_CONSTEXPR auto get_name(std::integral_constant<int, idx>)
-    -> decltype(detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name)
+    -> decltype(detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name())
   {
-    return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name;
+    return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name();
   }
 
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
@@ -306,7 +306,9 @@ struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                    
                                           TYPE,                                                                  \
                                           &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
 {                                                                                                                \
-  static VISIT_STRUCT_CONSTEXPR const ::visit_struct::detail::char_array<sizeof(#NAME)> & member_name = #NAME;   \
+  static VISIT_STRUCT_CONSTEXPR const ::visit_struct::detail::char_array<sizeof(#NAME)> & member_name() {        \
+    return #NAME;                                                                                                \
+  }                                                                                                              \
 };                                                                                                               \
 static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
                                                VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \
