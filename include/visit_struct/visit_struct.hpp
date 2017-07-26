@@ -280,9 +280,8 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
 #define VISIT_STRUCT_MAKE_GETTERS(MEMBER_NAME)                                                     \
   template <typename S>                                                                            \
   static VISIT_STRUCT_CONSTEXPR auto                                                               \
-    get_value(std::integral_constant<int, fields_enum::MEMBER_NAME>,                               \
-              S && s) ->                                                                           \
-    decltype(std::forward<S>(s).MEMBER_NAME) {                                                     \
+    get_value(std::integral_constant<int, fields_enum::MEMBER_NAME>, S && s) ->                    \
+    decltype((std::forward<S>(s).MEMBER_NAME)) {                                                   \
     return std::forward<S>(s).MEMBER_NAME;                                                         \
   }                                                                                                \
                                                                                                    \
