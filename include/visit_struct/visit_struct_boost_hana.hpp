@@ -58,9 +58,9 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
       using test_one = decltype(hana::second(pair)(*static_cast<S *>(nullptr)));
       using test_two = decltype(hana::second(pair)(*static_cast<const S *>(nullptr)));
 
-      using member_type = std::conditional<std::is_same<test_one, test_two>::value,
-                                           test_one,
-                                           visit_struct::traits::clean_t<test_one>>::type;
+      using member_type = typename std::conditional<std::is_same<test_one, test_two>::value,
+                                                    test_one,
+                                                    visit_struct::traits::clean_t<test_one>>::type;
 
       std::forward<V>(v)(hana::to<char const *>(hana::first(pair)),
                          visit_struct::type_c<member_type>{});
