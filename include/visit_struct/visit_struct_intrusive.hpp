@@ -167,6 +167,7 @@ struct intrusive_tag{};
 template <typename S, typename T, T S::*member_ptr>
 struct member_ptr_helper {
   static VISIT_STRUCT_CONSTEXPR T S::* get_ptr() { return member_ptr; }
+  using type = T;
 };
 
 // M should be derived from a member_ptr_helper
@@ -177,17 +178,23 @@ struct member_helper {
     std::forward<V>(visitor)(M::member_name(), std::forward<S>(structure_instance).*M::get_ptr());
   }
 
-  template <typename V>
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor) {
-    std::forward<V>(visitor)(M::member_name(), M::get_ptr());
-  }
-
   template <typename V, typename S1, typename S2>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor, S1 && s1, S2 && s2) {
     std::forward<V>(visitor)(M::member_name(),
                              std::forward<S1>(s1).*M::get_ptr(),
                              std::forward<S2>(s2).*M::get_ptr());
   }
+
+  template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor) {
+    std::forward<V>(visitor)(M::member_name(), M::get_ptr());
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor) {
+    std::forward<V>(visitor)(M::member_name(), visit_struct::type_c<typename M::type>{});
+  }
+
 };
 
 template <typename Mlist>
@@ -208,13 +215,6 @@ struct structure_helper<TypeList<Ms...>> {
     static_cast<void>(structure_instance);
   }
 
-  template <typename V>
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor) {
-    int dummy[] = {(member_helper<Ms>::apply_visitor(std::forward<V>(visitor)), 0)..., 0};
-    static_cast<void>(dummy);
-    static_cast<void>(visitor);
-  }
-
   template <typename V, typename S1, typename S2>
   VISIT_STRUCT_CXX14_CONSTEXPR static void apply_visitor(V && visitor, S1 && s1, S2 && s2) {
     int dummy[] = {(member_helper<Ms>::apply_visitor(std::forward<V>(visitor), std::forward<S1>(s1), std::forward<S2>(s2)), 0)..., 0};
@@ -222,6 +222,20 @@ struct structure_helper<TypeList<Ms...>> {
     static_cast<void>(visitor);
     static_cast<void>(s1);
     static_cast<void>(s2);
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor) {
+    int dummy[] = {(member_helper<Ms>::visit_pointers(std::forward<V>(visitor)), 0)..., 0};
+    static_cast<void>(dummy);
+    static_cast<void>(visitor);
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor) {
+    int dummy[] = {(member_helper<Ms>::visit_types(std::forward<V>(visitor)), 0)..., 0};
+    static_cast<void>(dummy);
+    static_cast<void>(visitor);
   }
 };
 
@@ -261,8 +275,13 @@ struct visitable <T,
 
   // Apply with no instance
   template <typename V>
-  static VISIT_STRUCT_CXX14_CONSTEXPR void apply(V && v) {
-    detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::apply_visitor(std::forward<V>(v));
+  static VISIT_STRUCT_CXX14_CONSTEXPR void visit_pointers(V && v) {
+    detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::visit_pointers(std::forward<V>(v));
+  }
+
+  template <typename V>
+  static VISIT_STRUCT_CXX14_CONSTEXPR void visit_types(V && v) {
+    detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::visit_types(std::forward<V>(v));
   }
 
   // Get value

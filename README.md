@@ -258,52 +258,6 @@ verbose, the implementation is a bit more complicated, and this one may not be
 useful in some cases, like if the struct you want to visit belongs to some other
 project and you can't change its definition.
 
-## Visitation without an instance
-
-Besides iteration over an *instance* of a registered struct, **visit_struct** also
-supports visiting the *definition* of the struct. In this case, instead of passing
-you the field name and the field value within some instance, it passes you the
-field name and the *pointer to member* corresponding to that field.
-
-For instance, the function call
-
-```c++
-visit_struct::apply_visitor<my_type>(v);
-```
-
-is similar to
-
-```c++
-v("a", &my_type::a);
-v("b", &my_type::b);
-v("c", &my_type::c);
-```
-
-This is potentially very useful in some situations. For instance, sometimes you want to
-output a diagnostic about the layout of some object, but actually instantiating
-it is complicated or expensive. With this version of `apply_visitor`, you get the names
-and the types of the members, without needing to actually instantiate the object.
-
-This may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
-In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
-for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
-
-Much thanks to Jarod42 for this patch.
-
-
-
-
-**Note:** The compatibility headers for `boost::fusion` and `boost::hana` don't
-currently support this version of `apply_visitor`.
-
-I don't know how to get the pointers-to-members
-like this from `boost::fusion` -- in [this stackoverflow answer](http://stackoverflow.com/questions/35893937/pointers-to-class-members-when-iterating-with-boostfusion) user `jv_`
-says he doesn't believe it's possible to get those pointers which `fusion` holds internally, and the smart bet is that he's right about such things.
-
-In the case of `hana`, it's not likely to be able to get them
-because it goes somewhat against the design, which views the "`struct` concept" as essentially "sequences of move-invariant values". Internally it represents all structs as tuples, and attempts to abstract away details like pointers to members. See the `hana` documentation for more on this.
-
-If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
 
 ## Binary Vistation
 
@@ -348,6 +302,71 @@ bool struct_eq(const T & t1, const T & t2) {
   return vis.result;
 }
 ```
+
+## Visitation without an instance
+
+Besides iteration over an *instance* of a registered struct, **visit_struct** also
+supports visiting the *definition* of the struct. In this case, instead of passing
+you the field name and the field value within some instance, it passes you the
+field name and the *pointer to member* corresponding to that field.
+
+Suppose you are serializing many structs in your program as json. You might also want to be able to emit the json schema associated
+to each struct that your program is expecting, especially to produce good diagnostics if loading the data fails. When you visit without
+an instance, you can get all the type information for the struct, but you don't have to actually instantiate it, which might be complicated or expensive.
+
+For instance, the function call
+
+```c++
+visit_struct::visit_pointers<my_type>(v);
+```
+
+is similar to
+
+```c++
+v("a", &my_type::a);
+v("b", &my_type::b);
+v("c", &my_type::c);
+```
+
+There's an alternate version which simply passes you the type, rather
+than the pointer to member.
+
+```c++
+visit_struct::visit_types<my_type>(v);
+```
+
+is similar to
+
+```c++
+v("a", visit_struct::type_c<a>());
+v("b", visit_struct::type_c<b>());
+v("c", visit_struct::type_c<c>());
+```
+
+Here, `type_c` is just a tag, so your visitor can take appropriate action using tag dispatch.
+This syntax is a little simpler than the pointer to member syntax.
+
+These may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
+In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
+for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
+
+Much thanks to Jarod42 for this patch.
+
+
+
+
+**Note:** The compatibility headers for `boost::fusion` and `boost::hana` don't
+currently support this version of `visit_pointers`. They only support `visit_types`.
+
+I don't know how to get the pointers-to-members
+like this from `boost::fusion` -- in [this stackoverflow answer](http://stackoverflow.com/questions/35893937/pointers-to-class-members-when-iterating-with-boostfusion) user `jv_`
+says he doesn't believe it's possible to get those pointers which `fusion` holds internally, and the smart bet is that he's right about such things.
+
+In the case of `hana`, it's not likely to be able to get them
+because it goes somewhat against the design, which views the "`struct` concept" as essentially "sequences of move-invariant values". Internally it represents all structs as tuples, and attempts to abstract away details like pointers to members. See the `hana` documentation for more on this.
+
+If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
+
 
 ## Tuple Methods
 

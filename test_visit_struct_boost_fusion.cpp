@@ -97,6 +97,33 @@ struct test_visitor_three {
   test_visitor_three(test_visitor_three &&) = delete;
 };
 
+// visitation without instance
+
+struct test_visitor_type {
+  std::vector<spair> result;
+
+  void operator()(const char* name, visit_struct::type_c<int>) {
+    result.emplace_back(spair{std::string{name}, "int"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<float>) {
+    result.emplace_back(spair{std::string{name}, "float"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<double>) {
+    result.emplace_back(spair{std::string{name}, "double"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<std::string>) {
+    result.emplace_back(spair{std::string{name}, "std::string"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<bool>) {
+    result.emplace_back(spair{std::string{name}, "bool"});
+  }
+};
+
+
 
 // debug_print
 
@@ -265,4 +292,32 @@ int main() {
     visit_struct::apply_visitor(vis, std::move(s));
     assert(vis.result == 3);
   }
+
+  // Test visitation without instance
+  {
+    test_visitor_type vis;
+
+    visit_struct::visit_types<dummy::test_struct_one>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "a");
+    assert(vis.result[0].second == "int");
+    assert(vis.result[1].first == "b");
+    assert(vis.result[1].second == "float");
+    assert(vis.result[2].first == "c");
+    assert(vis.result[2].second == "std::string");
+  }
+
+  {
+    test_visitor_type vis;
+
+    visit_struct::visit_types<test_struct_two>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "d");
+    assert(vis.result[0].second == "double");
+    assert(vis.result[1].first == "i");
+    assert(vis.result[1].second == "int");
+    assert(vis.result[2].first == "b");
+    assert(vis.result[2].second == "bool");
+  }
+
 }

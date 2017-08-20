@@ -54,7 +54,7 @@ struct test_visitor_one {
   }
 };
 
-struct test_visitor_type {
+struct test_visitor_ptr {
   std::vector<spair> result;
 
   template <typename C>
@@ -71,7 +71,22 @@ struct test_visitor_type {
   void operator()(const char* name, std::string C::*) {
     result.emplace_back(spair{std::string{name}, "std::string"});
   }
+};
 
+struct test_visitor_type {
+  std::vector<spair> result;
+
+  void operator()(const char* name, visit_struct::type_c<int>) {
+    result.emplace_back(spair{std::string{name}, "int"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<float>) {
+    result.emplace_back(spair{std::string{name}, "float"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<std::string>) {
+    result.emplace_back(spair{std::string{name}, "std::string"});
+  }
 };
 
 
@@ -329,9 +344,22 @@ int main() {
 
   // Test visiting with no instance
   {
+    test_visitor_ptr vis;
+
+    visit_struct::visit_pointers<test_struct_one>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "a");
+    assert(vis.result[0].second == "int");
+    assert(vis.result[1].first == "b");
+    assert(vis.result[1].second == "float");
+    assert(vis.result[2].first == "c");
+    assert(vis.result[2].second == "std::string");
+  }
+
+  {
     test_visitor_type vis;
 
-    visit_struct::apply_visitor<test_struct_one>(vis);
+    visit_struct::visit_types<test_struct_one>(vis);
     assert(vis.result.size() == 3u);
     assert(vis.result[0].first == "a");
     assert(vis.result[0].second == "int");

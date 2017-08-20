@@ -26,21 +26,6 @@
 
 namespace ext {
 
-// Count how many fields a visitable structure has
-
-struct count_visitor {
-  std::size_t count = 0;
-  template <typename T, typename S>
-  constexpr void operator()(const char * , T S::*) { ++count; }
-};
-
-template <typename T>
-constexpr std::size_t count_fields() {
-  count_visitor vis;
-  visit_struct::apply_visitor<T>(vis);
-  return vis.count;
-}
-
 // Get size / alignment at a particular index of visitable structure
 
 struct size_visitor {
@@ -73,7 +58,7 @@ template <typename T, std::size_t idx>
 constexpr std::size_t size_at() {
   size_visitor vis;
   vis.idx = idx;
-  visit_struct::apply_visitor<T>(vis);
+  visit_struct::visit_pointers<T>(vis);
   return vis.result;
 }
 
@@ -81,7 +66,7 @@ template <typename T, std::size_t idx>
 constexpr std::size_t align_at() {
   align_visitor vis;
   vis.idx = idx;
-  visit_struct::apply_visitor<T>(vis);
+  visit_struct::visit_pointers<T>(vis);
   return vis.result;
 }
 
@@ -121,7 +106,7 @@ struct mock_maker {
     using type = mock_tuple_t<mock_field_t<size_at<T, Is>(), align_at<T, Is>()> ...>;
   };
   
-  using type = typename helper<std::make_index_sequence<count_fields<T>()>>::type;
+  using type = typename helper<std::make_index_sequence<visit_struct::field_count<T>()>>::type;
   static constexpr std::size_t size = sizeof(type);
 };
 
@@ -148,7 +133,7 @@ struct foo {
 VISITABLE_STRUCT(foo, a, b, c);
 
 static_assert(sizeof(foo) == 3 * sizeof(int), "");
-static_assert(ext::count_fields<foo>() == 3, "");
+static_assert(visit_struct::field_count<foo>() == 3, "");
 static_assert(ext::size_at<foo, 0>() == sizeof(int), "");
 static_assert(ext::size_at<foo, 1>() == sizeof(int), "");
 static_assert(ext::size_at<foo, 2>() == sizeof(int), "");

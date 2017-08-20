@@ -32,13 +32,8 @@ struct test_visitor_one {
 
 using spair = std::pair<std::string, std::string>;
 
-struct test_visitor_type {
+struct test_visitor_ptr {
   std::vector<spair> result;
-
-  template <typename C>
-  void operator()(const char* name, bool C::*) {
-    result.emplace_back(spair{std::string{name}, "bool"});
-  }
 
   template <typename C>
   void operator()(const char* name, int C::*) {
@@ -51,10 +46,25 @@ struct test_visitor_type {
   }
 
   template <typename C>
-  void operator()(const char* name, std::string C::*) {
-    result.emplace_back(spair{std::string{name}, "std::string"});
+  void operator()(const char* name, bool C::*) {
+    result.emplace_back(spair{std::string{name}, "bool"});
+  }
+};
+
+struct test_visitor_type {
+  std::vector<spair> result;
+
+  void operator()(const char* name, visit_struct::type_c<int>) {
+    result.emplace_back(spair{std::string{name}, "int"});
   }
 
+  void operator()(const char* name, visit_struct::type_c<float>) {
+    result.emplace_back(spair{std::string{name}, "float"});
+  }
+
+  void operator()(const char* name, visit_struct::type_c<bool>) {
+    result.emplace_back(spair{std::string{name}, "bool"});
+  }
 };
 
 
@@ -198,9 +208,22 @@ int main() {
 
   // Test visitation without an instance
   {
+    test_visitor_ptr vis;
+
+    visit_struct::visit_pointers<test::foo>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "b");
+    assert(vis.result[0].second == "bool");
+    assert(vis.result[1].first == "i");
+    assert(vis.result[1].second == "int");
+    assert(vis.result[2].first == "f");
+    assert(vis.result[2].second == "float");
+  }
+
+  {
     test_visitor_type vis;
 
-    visit_struct::apply_visitor<test::foo>(vis);
+    visit_struct::visit_types<test::foo>(vis);
     assert(vis.result.size() == 3u);
     assert(vis.result[0].first == "b");
     assert(vis.result[0].second == "bool");

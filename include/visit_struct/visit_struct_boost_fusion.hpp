@@ -35,6 +35,7 @@ struct visitable<S,
 
 private:
   // T is a possible const / ref qualified version of S
+  // V should be a forwarding reference here, we should not be copying visitors
   template <typename V, typename T>
   struct helper {
     V visitor;
@@ -60,7 +61,20 @@ private:
       std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), std::move(fusion::at<Index>(struct_instance)));
     }
   };
-    
+
+  template <typename V, typename T>
+  struct helper_types {
+    V visitor;
+
+    explicit helper_types(V v) : visitor(std::forward<V>(v)) {}
+
+    template <typename Index>
+    void operator()(Index) const {
+      using current_type = typename fusion::result_of::value_at<T, Index>::type;
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<T, Index::value>::call(), visit_struct::type_c<current_type>{});
+    }
+  };
+
 public:
   static VISIT_STRUCT_CONSTEXPR const size_t field_count = fusion::result_of::size<S>::value;
 
@@ -85,6 +99,14 @@ public:
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
     using helper_t = helper_rvalue_ref<decltype(std::forward<V>(v)), S &&>;
     helper_t h{std::forward<V>(v), std::move(s)};
+    fusion::for_each(Indices(), h);
+  }
+
+  template <typename V>
+  static void visit_types(V && v) {
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using helper_t = helper_types<decltype(std::forward<V>(v)), S>;
+    helper_t h{std::forward<V>(v)};
     fusion::for_each(Indices(), h);
   }
 
