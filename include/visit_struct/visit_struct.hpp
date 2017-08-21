@@ -130,7 +130,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto visit_pointers(V && v) ->
   traits::visitable<traits::clean_t<S>>::visit_pointers(std::forward<V>(v));
 }
 
-// Interface (no instances)
+// Interface (apply visitor with no instances)
 // This calls visit_pointers for backwards compat reasons
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
@@ -170,6 +170,23 @@ template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<idx, S>()) {
   return get_name<idx, S>();
 }
+
+// Interface (get member pointer, by index)
+template <int idx, typename S>
+VISIT_STRUCT_CONSTEXPR auto get_pointer() ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value,
+             decltype(traits::visitable<traits::clean_t<S>>::get_pointer(std::integral_constant<int, idx>{}))
+           >::type
+{
+  return traits::visitable<traits::clean_t<S>>::get_pointer(std::integral_constant<int, idx>{});
+}
+
+template <int idx, typename S>
+VISIT_STRUCT_CONSTEXPR auto get_pointer(S &&) -> decltype(get_pointer<idx, S>()) {
+  return get_pointer<idx, S>();
+}
+  
 
 
 /***
@@ -322,6 +339,12 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
     get_name(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                             \
       decltype(#MEMBER_NAME) {                                                                     \
     return #MEMBER_NAME;                                                                           \
+  }                                                                                                \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR auto                                                               \
+    get_pointer(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                          \
+      decltype(&this_type::MEMBER_NAME) {                                                          \
+    return &this_type::MEMBER_NAME;                                                                \
   }                                                                                                \
 
 // This macro specializes the trait, provides "apply" method which does the work.

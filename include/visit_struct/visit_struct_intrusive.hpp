@@ -284,12 +284,20 @@ struct visitable <T,
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::visit_types(std::forward<V>(v));
   }
 
+  // Get pointer
+  template <int idx>
+  static VISIT_STRUCT_CONSTEXPR auto get_pointer(std::integral_constant<int, idx>)
+    -> decltype(detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr())
+  {
+    return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr();
+  }
+
   // Get value
   template <int idx, typename S>
-  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
-    -> decltype(std::forward<S>(s).*detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr())
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx> tag, S && s)
+    -> decltype(std::forward<S>(s).*get_pointer(tag))
   {
-    return std::forward<S>(s).*detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr();
+    return std::forward<S>(s).*get_pointer(tag);
   }
 
   // Get name

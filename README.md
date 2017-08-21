@@ -366,9 +366,9 @@ In the case of `hana`, it's not likely to be able to get them
 because it goes somewhat against the design, which views the "`struct` concept" as essentially "sequences of move-invariant values". Internally it represents all structs as tuples, and attempts to abstract away details like pointers to members. See the `hana` documentation for more on this.
 
 If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
+If you think you need the fusion or hana compatibility, then you should probably avoid anything to do with member pointers here.
 
-
-## Tuple Methods
+## Tuple Methods, Indexed Access
 
 For a long time, `apply_visitor` was the only function in the library. It's quite
 powerful and everything that I needed to do could be done using it comfortably.
@@ -378,23 +378,32 @@ However, one thing that you cannot easily use `apply_visitor` to do is implement
 methods, like `std::get<i>` to get the `i`'th member of the struct. By contrast, `apply_visitor`
 could be implemented with relative ease in C++11 using `std::get` and variadic templates,
 so arguably this is a more fundamental operation. Indeed, most if not all libraries that support struct-field reflection support this in some way.
-So, we decided it was remiss not to support this also.
+So, we decided that we should support this also.
 
 We didn't change our implementation of `apply_visitor`, which works well on all targets right now including MSVC 2013.
-But we have added three new functions which allow indexed access to structures.
+But we have added new functions which allow indexed access to structures, and to the metadata.
 
 ```c++
-visit_struct::get<i>(struct);
+visit_struct::get<i>(s);
 ```
 
-Gets (a reference to) the `i`'th visitable element of the struct. Index is 0-based. Analogous to `std::get`.
+Gets (a reference to) the `i`'th visitable element of the struct `s`. Index is 0-based. Analogous to `std::get`.
 
 ```c++
-visit_struct::get_name<i>(struct);
+visit_struct::get_name<i, S>();
+visit_struct::get_name<i>(s);
 ```
 
-Gets a `const char *` pointing to the name of the `i`'th visitable element of the struct. The struct type may also be passed as a second template parameter
-instead of as an argument.
+Gets a `const char *` pointing to the name of the `i`'th visitable element of the struct type `S`. The struct type may be passed as a second template parameter,
+or if an instance is available that may be passed as an argument, and the type will be deduced.
+
+```c++
+visit_struct::get_pointer<i, S>();
+visit_struct::get_pointer<i>(s);
+```
+
+Gets the pointer-to-member for the `i`'th visitable element of the struct type `S`. The struct type may be passed as a second template parameter,
+or if an instance is available that may be passed as an argument, and the type will be deduced.
 
 ```c++
 visit_struct::field_count<S>();

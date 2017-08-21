@@ -192,6 +192,9 @@ static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struc
 static_assert(std::is_same<decltype(visit_struct::get_name<0, test_struct_one>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<1, test_struct_one>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<2, test_struct_one>()), const char (&)[2]>::value, "");
+static_assert(visit_struct::get_pointer<0, test_struct_one>() == &test_struct_one::a, "");
+static_assert(visit_struct::get_pointer<1, test_struct_one>() == &test_struct_one::b, "");
+static_assert(visit_struct::get_pointer<2, test_struct_one>() == &test_struct_one::c, "");
 
 int main() {
   std::cout << __FILE__ << std::endl;

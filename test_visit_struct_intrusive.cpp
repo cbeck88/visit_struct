@@ -137,6 +137,9 @@ static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test::foo>
 static_assert(std::is_same<decltype(visit_struct::get_name<0, test::foo>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<1, test::foo>()), const char (&)[2]>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get_name<2, test::foo>()), const char (&)[2]>::value, "");
+static_assert(visit_struct::get_pointer<0, test::foo>() == &test::foo::b, "");
+static_assert(visit_struct::get_pointer<1, test::foo>() == &test::foo::i, "");
+static_assert(visit_struct::get_pointer<2, test::foo>() == &test::foo::f, "");
 
 int main() {
   std::cout << __FILE__ << std::endl;
