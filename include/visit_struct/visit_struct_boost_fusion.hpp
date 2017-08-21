@@ -34,6 +34,13 @@ struct visitable<S,
 {
 
 private:
+  // Get names for members of fusion structure S
+  // Cage the unwieldy fusion syntax
+  template <int idx>
+  static VISIT_STRUCT_CONSTEXPR auto field_name() -> decltype(fusion::extension::struct_member_name<S, idx>::call()) {
+    return fusion::extension::struct_member_name<S, idx>::call();
+  }
+
   // Accessor type for fusion structure S
   template <int idx>
   struct accessor {
@@ -65,7 +72,7 @@ private:
     template <typename Index>
     VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
       using accessor_t = accessor<Index::value>;
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), accessor_t()(std::forward<T>(struct_instance)));
+      std::forward<V>(visitor)(field_name<Index::value>(), accessor_t()(std::forward<T>(struct_instance)));
     }
   };
 
@@ -78,7 +85,7 @@ private:
     template <typename Index>
     VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
       using current_type = typename fusion::result_of::value_at<S, Index>::type;
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), visit_struct::type_c<current_type>{});
+      std::forward<V>(visitor)(field_name<Index::value>(), visit_struct::type_c<current_type>{});
     }
   };
 
@@ -91,7 +98,7 @@ private:
     template <typename Index>
     VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
       using accessor_t = accessor<Index::value>;
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), accessor_t());
+      std::forward<V>(visitor)(field_name<Index::value>(), accessor_t());
     }
   };
 
@@ -146,8 +153,10 @@ public:
   }
 
   template <int idx>
-  static VISIT_STRUCT_CONSTEXPR const char * get_name(std::integral_constant<int, idx>) {
-    return fusion::extension::struct_member_name<S, idx>::call();
+  static VISIT_STRUCT_CONSTEXPR auto get_name(std::integral_constant<int, idx>)
+    -> decltype(field_name<idx>())
+  {
+    return field_name<idx>();
   }
 
   template <int idx>
