@@ -98,27 +98,12 @@ private:
 public:
   static VISIT_STRUCT_CONSTEXPR const size_t field_count = fusion::result_of::size<S>::value;
 
-  template <typename V>
-  static void apply(V && v, const S & s) {
+  // T should be a qualified S
+  template <typename V, typename T>
+  static void apply(V && v, T && t) {
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), const S &>;
-    fv_t fv{std::forward<V>(v), s};
-    fusion::for_each(Indices(), fv);
-  }
-
-  template <typename V>
-  static void apply(V && v, S & s) {
-    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), S &>;
-    fv_t fv{std::forward<V>(v), s};
-    fusion::for_each(Indices(), fv);
-  }
-
-  template <typename V>
-  static void apply(V && v, S && s) {
-    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), S &&>;
-    fv_t fv{std::forward<V>(v), std::move(s)};
+    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), decltype(std::forward<T>(t))>;
+    fv_t fv{std::forward<V>(v), std::forward<T>(t)};
     fusion::for_each(Indices(), fv);
   }
 
