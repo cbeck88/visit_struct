@@ -130,26 +130,12 @@ public:
     fusion::for_each(Indices(), fv);
   }
 
-
-  template <int idx>
-  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S & s)
-    -> decltype(fusion::at_c<idx>(s))
+  // T should be qualified S
+  template <int idx, typename T>
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, T && t)
+    -> decltype(accessor<idx>()(std::forward<T>(t)))
   {
-    return fusion::at_c<idx>(s);
-  }
-
-  template <int idx>
-  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, const S & s)
-    -> decltype(fusion::at_c<idx>(s))
-  {
-    return fusion::at_c<idx>(s);
-  }
-
-  template <int idx>
-  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
-    -> decltype(std::move(fusion::at_c<idx>(s)))
-  {
-    return std::move(fusion::at_c<idx>(s));
+    return accessor<idx>()(std::forward<T>(t));
   }
 
   template <int idx>
