@@ -141,7 +141,7 @@ struct type_visitor {
     result.push_back("double");
   }
 
-  void operator()(const char *, visit_struct::type_c<int>) {
+  void operator()(const char *, visit_struct::type_c<std::string>) {
     result.push_back("std::string");
   }
 };
