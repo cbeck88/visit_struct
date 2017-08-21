@@ -302,10 +302,10 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
   std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S>(struct_instance).MEMBER_NAME);
 
 #define VISIT_STRUCT_MEMBER_HELPER_PTR(MEMBER_NAME)                                                \
-  std::forward<V>(visitor)(#MEMBER_NAME, &self_type::MEMBER_NAME);
+  std::forward<V>(visitor)(#MEMBER_NAME, &this_type::MEMBER_NAME);
 
 #define VISIT_STRUCT_MEMBER_HELPER_TYPE(MEMBER_NAME)                                               \
-  std::forward<V>(visitor)(#MEMBER_NAME, visit_struct::type_c<decltype(self_type::MEMBER_NAME)>{});
+  std::forward<V>(visitor)(#MEMBER_NAME, visit_struct::type_c<decltype(this_type::MEMBER_NAME)>{});
 
 #define VISIT_STRUCT_MEMBER_HELPER_PAIR(MEMBER_NAME)                                               \
   std::forward<V>(visitor)(#MEMBER_NAME, std::forward<S1>(s1).MEMBER_NAME, std::forward<S2>(s2).MEMBER_NAME);
@@ -344,6 +344,9 @@ namespace traits {                                                              
                                                                                                    \
 template <>                                                                                        \
 struct visitable<STRUCT_NAME, void> {                                                              \
+                                                                                                   \
+  using this_type = STRUCT_NAME;                                                                   \
+                                                                                                   \
   static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
                                                                                                    \
@@ -362,14 +365,12 @@ struct visitable<STRUCT_NAME, void> {                                           
   template <typename V>                                                                            \
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor)                            \
   {                                                                                                \
-    using self_type = STRUCT_NAME;                                                                 \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PTR, __VA_ARGS__)                               \
   }                                                                                                \
                                                                                                    \
   template <typename V>                                                                            \
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor)                               \
   {                                                                                                \
-    using self_type = STRUCT_NAME;                                                                 \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
   }                                                                                                \
                                                                                                    \
