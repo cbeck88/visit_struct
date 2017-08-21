@@ -122,8 +122,8 @@ int struct_cmp(const T & t1, const T & t2) {
 }
 
 // Test types visitation
-struct type_visitor {
-  std::vector<std::string> results;
+struct types_visitor {
+  std::vector<std::string> result;
 
   void operator()(const char *, visit_struct::type_c<int>) {
     result.push_back("int");
@@ -342,19 +342,18 @@ int main() {
   {
     types_visitor vis;
     visit_struct::visit_types<dummy::test_struct_one>(vis);
-    assert(vis.results.size() == 3);
-    assert(vis.results[0] == "int");
-    assert(vis.results[1] == "float");
-    assert(vis.results[2] == "std::string");
+    assert(vis.result.size() == 3);
+    assert(vis.result[0] == "int");
+    assert(vis.result[1] == "float");
+    assert(vis.result[2] == "std::string");
   }
 
   {
     types_visitor vis;
     visit_struct::visit_types<test_struct_two>(vis);
-    assert(vis.results.size() == 4);
-    assert(vis.results[0] == "bool");
-    assert(vis.results[1] == "int");
-    assert(vis.results[2] == "double");
-    assert(vis.results[3] == "std::string");
+    assert(vis.result.size() == 3);
+    assert(vis.result[0] == "double");
+    assert(vis.result[1] == "int");
+    assert(vis.result[2] == "bool");
   }
 }
