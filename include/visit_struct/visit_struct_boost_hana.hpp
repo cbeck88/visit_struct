@@ -67,6 +67,14 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
     });
   }
 
+  template <typename V>
+  static constexpr void visit_accessors(V && v) {
+    hana::for_each(hana::accessors<S>(), [&v](auto pair) {
+      std::forward<V>(v)(hana::to<char const *>(hana::first(pair)),
+                         hana::second(pair));
+    });
+  }
+
   template <int idx, typename T>
   static constexpr auto get_value(std::integral_constant<int, idx>, T && t) ->
     decltype(hana::second(hana::at(hana::accessors<S>(), hana::size_c<idx>)) (std::forward<T>(t))) {
@@ -76,6 +84,12 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
   template <int idx>
   static constexpr auto get_name(std::integral_constant<int, idx>) -> const char * {
     return hana::to<const char *>(hana::first(hana::at(hana::accessors<S>(), hana::size_c<idx>)));
+  }
+
+  template <int idx>
+  static constexpr auto get_accessor(std::integral_constant<int, idx>) ->
+    decltype(hana::second(hana::at(hana::accessors<S>(), hana::size_c<idx>))) {
+    return hana::second(hana::at(hana::accessors<S>(), hana::size_c<idx>));
   }
 
   static constexpr bool value = true;

@@ -34,44 +34,64 @@ struct visitable<S,
 {
 
 private:
-  // T is a possible const / ref qualified version of S
+  // Accessor type for fusion structure S
+  template <int idx>
+  struct accessor {
+    VISIT_STRUCT_CONSTEXPR auto operator()(S & s) const ->
+    decltype(fusion::at_c<idx>(s)) {
+      return fusion::at_c<idx>(s);
+    }
+
+    VISIT_STRUCT_CONSTEXPR auto operator()(const S & s) const ->
+    decltype(fusion::at_c<idx>(s)) {
+      return fusion::at_c<idx>(s);
+    }
+
+    VISIT_STRUCT_CONSTEXPR auto operator()(S && s) const ->
+    decltype(std::move(fusion::at_c<idx>(s))) {
+      return std::move(fusion::at_c<idx>(s));
+    }
+  };
+
+  // T is a const / ref qualified version of S
   // V should be a forwarding reference here, we should not be copying visitors
   template <typename V, typename T>
-  struct helper {
+  struct fusion_visitor {
     V visitor;
     T struct_instance;
 
-    explicit helper(V v, T t) : visitor(std::forward<V>(v)), struct_instance(t) {}
+    explicit fusion_visitor(V v, T t) : visitor(std::forward<V>(v)), struct_instance(std::forward<T>(t)) {}
 
     template <typename Index>
-    void operator()(Index) const {
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), fusion::at<Index>(struct_instance));
+    VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
+      using accessor_t = accessor<Index::value>;
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), accessor_t()(std::forward<T>(struct_instance)));
     }
   };
 
-  template <typename V, typename T>
-  struct helper_rvalue_ref {
+  template <typename V>
+  struct fusion_visitor_types {
     V visitor;
-    T struct_instance;
 
-    explicit helper_rvalue_ref(V v, T t) : visitor(std::forward<V>(v)), struct_instance(std::move(t)) {}
+    explicit fusion_visitor_types(V v) : visitor(std::forward<V>(v)) {}
 
     template <typename Index>
-    void operator()(Index) const {
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), std::move(fusion::at<Index>(struct_instance)));
+    VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
+      using current_type = typename fusion::result_of::value_at<S, Index>::type;
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), visit_struct::type_c<current_type>{});
     }
   };
 
-  template <typename V, typename T>
-  struct helper_types {
+  template <typename V>
+  struct fusion_visitor_accessors {
     V visitor;
 
-    explicit helper_types(V v) : visitor(std::forward<V>(v)) {}
+    explicit fusion_visitor_accessors(V v) : visitor(std::forward<V>(v)) {}
 
     template <typename Index>
-    void operator()(Index) const {
-      using current_type = typename fusion::result_of::value_at<T, Index>::type;
-      std::forward<V>(visitor)(fusion::extension::struct_member_name<T, Index::value>::call(), visit_struct::type_c<current_type>{});
+    VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
+      using accessor_t = accessor<Index::value>;
+      std::forward<V>(visitor)(fusion::extension::struct_member_name<S, Index::value>::call(), accessor_t());
     }
   };
 
@@ -81,59 +101,75 @@ public:
   template <typename V>
   static void apply(V && v, const S & s) {
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using helper_t = helper<decltype(std::forward<V>(v)), const S &>;
-    helper_t h{std::forward<V>(v), s};
-    fusion::for_each(Indices(), h);
+    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), const S &>;
+    fv_t fv{std::forward<V>(v), s};
+    fusion::for_each(Indices(), fv);
   }
 
   template <typename V>
   static void apply(V && v, S & s) {
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using helper_t = helper<decltype(std::forward<V>(v)), S &>;
-    helper_t h{std::forward<V>(v), s};
-    fusion::for_each(Indices(), h);
+    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), S &>;
+    fv_t fv{std::forward<V>(v), s};
+    fusion::for_each(Indices(), fv);
   }
 
   template <typename V>
   static void apply(V && v, S && s) {
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using helper_t = helper_rvalue_ref<decltype(std::forward<V>(v)), S &&>;
-    helper_t h{std::forward<V>(v), std::move(s)};
-    fusion::for_each(Indices(), h);
+    using fv_t = fusion_visitor<decltype(std::forward<V>(v)), S &&>;
+    fv_t fv{std::forward<V>(v), std::move(s)};
+    fusion::for_each(Indices(), fv);
   }
 
   template <typename V>
   static void visit_types(V && v) {
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
-    using helper_t = helper_types<decltype(std::forward<V>(v)), S>;
-    helper_t h{std::forward<V>(v)};
-    fusion::for_each(Indices(), h);
+    using fv_t = fusion_visitor_types<decltype(std::forward<V>(v))>;
+    fv_t fv{std::forward<V>(v)};
+    fusion::for_each(Indices(), fv);
   }
 
+  template <typename V>
+  static void visit_accessors(V && v) {
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using fv_t = fusion_visitor_accessors<decltype(std::forward<V>(v))>;
+    fv_t fv{std::forward<V>(v)};
+    fusion::for_each(Indices(), fv);
+  }
+
+
   template <int idx>
-  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S & s)
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S & s)
     -> decltype(fusion::at_c<idx>(s))
   {
     return fusion::at_c<idx>(s);
   }
 
   template <int idx>
-  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, const S & s)
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, const S & s)
     -> decltype(fusion::at_c<idx>(s))
   {
     return fusion::at_c<idx>(s);
   }
 
   template <int idx>
-  static VISIT_STRUCT_CXX14_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
+  static VISIT_STRUCT_CONSTEXPR auto get_value(std::integral_constant<int, idx>, S && s)
     -> decltype(std::move(fusion::at_c<idx>(s)))
   {
     return std::move(fusion::at_c<idx>(s));
   }
 
   template <int idx>
-  static VISIT_STRUCT_CXX14_CONSTEXPR const char * get_name(std::integral_constant<int, idx>) {
+  static VISIT_STRUCT_CONSTEXPR const char * get_name(std::integral_constant<int, idx>) {
     return fusion::extension::struct_member_name<S, idx>::call();
+  }
+
+  template <int idx>
+  static VISIT_STRUCT_CONSTEXPR auto get_accessor(std::integral_constant<int, idx>) ->
+    accessor<idx>
+  {
+    return {};
   }
 
   static VISIT_STRUCT_CONSTEXPR const bool value = true;

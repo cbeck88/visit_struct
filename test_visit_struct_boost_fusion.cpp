@@ -175,6 +175,9 @@ int main() {
     assert(visit_struct::get_name<0>(s) == std::string{"a"});
     assert(visit_struct::get_name<1>(s) == std::string{"b"});
     assert(visit_struct::get_name<2>(s) == std::string{"c"});
+    assert(visit_struct::get_accessor<0>(s)(s) == visit_struct::get<0>(s));
+    assert(visit_struct::get_accessor<1>(s)(s) == visit_struct::get<1>(s));
+    assert(visit_struct::get_accessor<2>(s)(s) == visit_struct::get<2>(s));
 
     test_visitor_one vis1;
     visit_struct::apply_visitor(vis1, s);

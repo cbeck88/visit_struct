@@ -314,6 +314,7 @@ Suppose you are serializing many structs in your program as json. You might also
 to each struct that your program is expecting, especially to produce good diagnostics if loading the data fails. When you visit without
 an instance, you can get all the type information for the struct, but you don't have to actually instantiate it, which might be complicated or expensive.
 
+
 For instance, the function call
 
 ```c++
@@ -328,7 +329,14 @@ v("b", &my_type::b);
 v("c", &my_type::c);
 ```
 
-There's an alternate version which simply passes you the type, rather
+
+These may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
+In that case, these visitations are `constexpr` also, so you can use this
+for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
+
+There are two alternate versions of this visitation.
+
+In one version, you simply get passed the type, rather
 than the pointer to member.
 
 ```c++
@@ -343,20 +351,35 @@ v("b", visit_struct::type_c<b>());
 v("c", visit_struct::type_c<c>());
 ```
 
-Here, `type_c` is just a tag, so your visitor can take appropriate action using tag dispatch.
+Here, `type_c` is just a tag, so that your visitor can take appropriate action using tag dispatch.
 This syntax is a little simpler than the pointer to member syntax.
 
-These may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
-In that case, `visit_struct::apply_visitor` is `constexpr` also, so you can use this
-for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
+In the third version, you get passed an "accessor", that is, a function object that implements the function computed by
+the pointer-to-member. It will contain overloads for `&`, `const &`, and `&&` for your structure, and will return the member-access
+expression for that member. Accessors are convenient because they can be used easily with other standard algorithms that require function objects,
+they avoid the complex syntax of member pointers, and because they are well-supported by hana and fusion.
 
-Much thanks to Jarod42 for this patch.
+This call
+
+```c++
+visit_struct::visit_accessors<my_type>(v);
+```
+
+is roughly similar to
+
+```c++
+v("a", [](auto s) { return s.a; });
+v("b", [](auto s) { return s.b; });
+v("c", [](auto s) { return s.c; });
+```
+
+Much thanks to Jarod42 for this patch and subsequent suggestions.
 
 
 
 
 **Note:** The compatibility headers for `boost::fusion` and `boost::hana` don't
-currently support this version of `visit_pointers`. They only support `visit_types`.
+currently support this version of `visit_pointers`. They only support `visit_types`, and `visit_accessors`.
 
 I don't know how to get the pointers-to-members
 like this from `boost::fusion` -- in [this stackoverflow answer](http://stackoverflow.com/questions/35893937/pointers-to-class-members-when-iterating-with-boostfusion) user `jv_`
@@ -366,7 +389,7 @@ In the case of `hana`, it's not likely to be able to get them
 because it goes somewhat against the design, which views the "`struct` concept" as essentially "sequences of move-invariant values". Internally it represents all structs as tuples, and attempts to abstract away details like pointers to members. See the `hana` documentation for more on this.
 
 If you really want or need to be able to get the pointers to members, that's a pretty good reason to use `visit_struct` honestly.
-If you think you need the fusion or hana compatibility, then you should probably avoid anything to do with member pointers here.
+If you think you need the fusion or hana compatibility, then you should probably avoid anything to do with member pointers here, and stick to accessors instead.
 
 ## Tuple Methods, Indexed Access
 
@@ -402,8 +425,14 @@ visit_struct::get_pointer<i, S>();
 visit_struct::get_pointer<i>(s);
 ```
 
-Gets the pointer-to-member for the `i`'th visitable element of the struct type `S`. The struct type may be passed as a second template parameter,
-or if an instance is available that may be passed as an argument, and the type will be deduced.
+Gets the pointer-to-member for the `i`'th visitable element of the struct type `S`.
+
+```c++
+visit_struct::get_accessor<i, S>();
+visit_struct::get_accessor<i>(s);
+```
+
+Gets the accessor corresponding to the `i`'th visitable element of the struct type `S`.
 
 ```c++
 visit_struct::field_count<S>();

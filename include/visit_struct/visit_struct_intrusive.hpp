@@ -167,7 +167,9 @@ struct intrusive_tag{};
 template <typename S, typename T, T S::*member_ptr>
 struct member_ptr_helper {
   static VISIT_STRUCT_CONSTEXPR T S::* get_ptr() { return member_ptr; }
-  using type = T;
+  using value_type = T;
+
+  using accessor_t = visit_struct::accessor<T S::*, member_ptr>;
 };
 
 // M should be derived from a member_ptr_helper
@@ -191,8 +193,13 @@ struct member_helper {
   }
 
   template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor) {
+    std::forward<V>(visitor)(M::member_name(), M::accessor_t());
+  }
+
+  template <typename V>
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor) {
-    std::forward<V>(visitor)(M::member_name(), visit_struct::type_c<typename M::type>{});
+    std::forward<V>(visitor)(M::member_name(), visit_struct::type_c<typename M::value_type>{});
   }
 
 };
@@ -227,6 +234,13 @@ struct structure_helper<TypeList<Ms...>> {
   template <typename V>
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor) {
     int dummy[] = {(member_helper<Ms>::visit_pointers(std::forward<V>(visitor)), 0)..., 0};
+    static_cast<void>(dummy);
+    static_cast<void>(visitor);
+  }
+
+  template <typename V>
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor) {
+    int dummy[] = {(member_helper<Ms>::visit_accessors(std::forward<V>(visitor)), 0)..., 0};
     static_cast<void>(dummy);
     static_cast<void>(visitor);
   }
@@ -290,6 +304,14 @@ struct visitable <T,
     -> decltype(detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr())
   {
     return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::get_ptr();
+  }
+
+  // Get accessor
+  template <int idx>
+  static VISIT_STRUCT_CONSTEXPR auto get_accessor(std::integral_constant<int, idx>)
+    -> typename detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::accessor_t
+  {
+    return {};
   }
 
   // Get value

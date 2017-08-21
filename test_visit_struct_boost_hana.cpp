@@ -121,6 +121,30 @@ int struct_cmp(const T & t1, const T & t2) {
   return vis.result;
 }
 
+// Test types visitation
+struct type_visitor {
+  std::vector<std::string> results;
+
+  void operator()(const char *, visit_struct::type_c<int>) {
+    result.push_back("int");
+  }
+
+  void operator()(const char *, visit_struct::type_c<bool>) {
+    result.push_back("bool");
+  }
+
+  void operator()(const char *, visit_struct::type_c<float>) {
+    result.push_back("float");
+  }
+
+  void operator()(const char *, visit_struct::type_c<double>) {
+    result.push_back("double");
+  }
+
+  void operator()(const char *, visit_struct::type_c<int>) {
+    result.push_back("std::string");
+  }
+};
 
 // debug_print
 
@@ -168,6 +192,9 @@ int main() {
     assert(visit_struct::get_name<0>(s) == std::string{"a"});
     assert(visit_struct::get_name<1>(s) == std::string{"b"});
     assert(visit_struct::get_name<2>(s) == std::string{"c"});
+    assert(visit_struct::get_accessor<0>(s)(s) == visit_struct::get<0>(s));
+    assert(visit_struct::get_accessor<1>(s)(s) == visit_struct::get<1>(s));
+    assert(visit_struct::get_accessor<2>(s)(s) == visit_struct::get<2>(s));
 
     test_visitor_one vis1;
     visit_struct::apply_visitor(vis1, s);
@@ -309,5 +336,25 @@ int main() {
     assert(-1 == struct_cmp(f1, f2));
     assert(0 == struct_cmp(f2, f2));
     assert(1 == struct_cmp(f2, f1));
+  }
+
+  // Test types visitation
+  {
+    types_visitor vis;
+    visit_struct::visit_types<dummy::test_struct_one>(vis);
+    assert(vis.results.size() == 3);
+    assert(vis.results[0] == "int");
+    assert(vis.results[1] == "float");
+    assert(vis.results[2] == "std::string");
+  }
+
+  {
+    types_visitor vis;
+    visit_struct::visit_types<test_struct_two>(vis);
+    assert(vis.results.size() == 4);
+    assert(vis.results[0] == "bool");
+    assert(vis.results[1] == "int");
+    assert(vis.results[2] == "double");
+    assert(vis.results[3] == "std::string");
   }
 }
