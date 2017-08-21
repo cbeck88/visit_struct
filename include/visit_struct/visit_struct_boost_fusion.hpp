@@ -60,7 +60,7 @@ private:
     }
   };
 
-  // T is a const / ref qualified version of S
+  // T is a qualified S
   // V should be a forwarding reference here, we should not be copying visitors
   template <typename V, typename T>
   struct fusion_visitor {
@@ -73,6 +73,25 @@ private:
     VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
       using accessor_t = accessor<Index::value>;
       std::forward<V>(visitor)(field_name<Index::value>(), accessor_t()(std::forward<T>(struct_instance)));
+    }
+  };
+
+  template <typename V, typename T1, typename T2>
+  struct fusion_visitor_pair {
+    V visitor;
+    T1 instance_1;
+    T2 instance_2;
+
+    explicit fusion_visitor_pair(V v, T1 t1, T2 t2)
+      : visitor(std::forward<V>(v))
+      , instance_1(std::forward<T1>(t1))
+      , instance_2(std::forward<T2>(t2))
+    {}
+
+    template <typename Index>
+    VISIT_STRUCT_CXX14_CONSTEXPR void operator()(Index) const {
+      accessor<Index::value> a;
+      std::forward<V>(visitor)(field_name<Index::value>(), a(std::forward<T1>(instance_1)), a(std::forward<T2>(instance_2)));
     }
   };
 
@@ -111,6 +130,14 @@ public:
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
     using fv_t = fusion_visitor<decltype(std::forward<V>(v)), decltype(std::forward<T>(t))>;
     fv_t fv{std::forward<V>(v), std::forward<T>(t)};
+    fusion::for_each(Indices(), fv);
+  }
+
+  template <typename V, typename T1, typename T2>
+  static void apply(V && v, T1 && t1, T2 && t2) {
+    using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
+    using fv_t = fusion_visitor_pair<decltype(std::forward<V>(v)), decltype(std::forward<T1>(t1)), decltype(std::forward<T2>(t2))>;
+    fv_t fv{std::forward<V>(v), std::forward<T1>(t1), std::forward<T2>(t2)};
     fusion::for_each(Indices(), fv);
   }
 
