@@ -225,7 +225,10 @@ VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>(
 
 // Interface (get type, by index)
 template <int idx, typename S>
-using type_at = typename decltype(traits::visitable<traits::clean_t<S>>::type_at(std::integral_constant<int, idx>{}))::type;
+using type_c_at = decltype(traits::visitable<traits::clean_t<S>>::type_at(std::integral_constant<int, idx>{}));
+
+template <int idx, typename S>
+using type_at = typename type_c_at<idx, S>::type;
 
 /***
  * To implement the VISITABLE_STRUCT macro, we need a map-macro, which can take
