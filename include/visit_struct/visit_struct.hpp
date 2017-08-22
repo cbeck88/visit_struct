@@ -233,6 +233,22 @@ struct type_at_s {
 template <int idx, typename S>
 using type_at = typename type_at_s<idx, S>::type;
 
+// Interface (get name of structure)
+template <typename S>
+VISIT_STRUCT_CONSTEXPR auto get_name() ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value,
+             decltype(traits::visitable<traits::clean_t<S>>::get_name())
+           >::type
+{
+  return traits::visitable<traits::clean_t<S>>::get_name();
+}
+
+template <typename S>
+VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<S>()) {
+  return get_name<S>();
+}
+
 /***
  * To implement the VISITABLE_STRUCT macro, we need a map-macro, which can take
  * the name of a macro and some other arguments, and apply that macro to each other argument.
@@ -428,6 +444,11 @@ template <>                                                                     
 struct visitable<STRUCT_NAME, void> {                                                              \
                                                                                                    \
   using this_type = STRUCT_NAME;                                                                   \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR auto get_name()                                                    \
+    -> decltype(#STRUCT_NAME) {                                                                    \
+    return #STRUCT_NAME;                                                                           \
+  }                                                                                                \
                                                                                                    \
   static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \

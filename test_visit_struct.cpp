@@ -272,6 +272,11 @@ int main() {
     assert(vis4.result[1].second == &t.b);
     assert(vis4.result[2].first == vis2.result[2].first);
     assert(vis4.result[2].second == &t.c);
+
+    // test get_name
+    assert(std::string("test_struct_one") == visit_struct::get_name(s));
+    assert(std::string("test_struct_one") == visit_struct::get_name(t));
+    assert(std::string("test_struct_one") == visit_struct::get_name<test_struct_one>());
   }
 
   {
@@ -332,6 +337,11 @@ int main() {
     assert(vis4.result[1].second == &t.i);
     assert(vis4.result[2].first == vis2.result[2].first);
     assert(vis4.result[2].second == &t.b);
+
+    // test get_name
+    assert(std::string("test_struct_two") == visit_struct::get_name(s));
+    assert(std::string("test_struct_two") == visit_struct::get_name(t));
+    assert(std::string("test_struct_two") == visit_struct::get_name<test_struct_two>());
   }
 
   // Test move semantics

@@ -335,6 +335,11 @@ struct visitable <T,
   static auto type_at(std::integral_constant<int, idx>)
     -> visit_struct::type_c<typename detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::value_type>;
 
+  // Get name of structure
+  static VISIT_STRUCT_CONSTEXPR decltype(T::Visit_Struct_Get_Name__()) get_name() {
+    return T::Visit_Struct_Get_Name__();
+  }
+
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 
@@ -350,6 +355,9 @@ struct visitable <T,
 
 #define BEGIN_VISITABLES(NAME)                                                                                   \
 typedef NAME VISIT_STRUCT_CURRENT_TYPE;                                                                          \
+static VISIT_STRUCT_CONSTEXPR decltype(#NAME) Visit_Struct_Get_Name__() {                                        \
+  return #NAME;                                                                                                  \
+}                                                                                                                \
 ::visit_struct::detail::TypeList<> static inline Visit_Struct_Get_Visitables__(::visit_struct::detail::Rank<0>); \
 static_assert(true, "")
 

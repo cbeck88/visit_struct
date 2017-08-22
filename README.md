@@ -446,6 +446,20 @@ visit_struct::field_count<S>();
 
 Gets a `size_t` which tells how many visitable fields there are.
 
+```c++
+visit_struct::get_name<S>();
+```
+
+Gets a string constant representing the name of the structure. The string is, exactly, the token that you passed to the `visit_struct` macro in order to register the structure.
+
+This could be useful for error messages. E.g. "Failed to match json input with struct of type 'foo', layout: ..."
+
+There are other ways to get a name for the type, such as `typeid`, but it has implementation-defined behavior and sometimes gives a mangled name. However, the `visit_struct` name might not
+always be acceptable either -- it might contain namespaces, or not, depending on if you use standard or intrusive syntax, for instance.
+
+Since the programmer is already taking the trouble of passing this name into a macro to register the struct, we think we might as well give programmatic access to that string if they want it.
+
+Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
 
 ## Limits
 

@@ -195,6 +195,10 @@ int main() {
     assert(vis.values[3] == 0);
     assert(vis.values[4] == 19);
     assert(vis.values[5] == -1.5);
+
+    // test get_name
+    assert(std::string("foo") == visit_struct::get_name(s));
+    assert(std::string("foo") == visit_struct::get_name<test::foo>());
   }
 
   // Test move semantics
