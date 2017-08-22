@@ -22,25 +22,20 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
 {
   static constexpr size_t field_count = decltype(hana::length(hana::accessors<S>()))::value;
 
-  static constexpr auto get_hana_keys() {
-    return hana::transform(hana::accessors<S>(), hana::first);
-  }
-
-  // Note: U should be the same as S modulo const and reference, interface
-  // should ensure that
+  // Note: U should be qualified S (const and references) S, interface should ensure that
   template <typename V, typename U>
   static constexpr void apply(V && v, U && u) {
-    hana::for_each(get_hana_keys(), [&v, &u](auto key) {
-      std::forward<V>(v)(hana::to<char const *>(key), hana::at_key(std::forward<U>(u), key));
+    hana::for_each(hana::accessors<S>(), [&v, &u](auto pair) {
+      std::forward<V>(v)(hana::to<char const *>(hana::first(pair)), hana::second(pair)(std::forward<U>(u)));
     });
   }
 
   template <typename V, typename U1, typename U2>
   static constexpr void apply(V && v, U1 && u1, U2 && u2) {
-    hana::for_each(get_hana_keys(), [&v, &u1, &u2](auto key) {
-      std::forward<V>(v)(hana::to<char const *>(key),
-                         hana::at_key(std::forward<U1>(u1), key),
-                         hana::at_key(std::forward<U2>(u2), key));
+    hana::for_each(hana::accessors<S>(), [&v, &u1, &u2](auto pair) {
+      std::forward<V>(v)(hana::to<char const *>(hana::first(pair)),
+                         hana::second(pair)(std::forward<U1>(u1)),
+                         hana::second(pair)(std::forward<U2>(u2)));
     });
   }
 
@@ -50,7 +45,7 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
       // Finding the declared type of the member with hana is tricky because hana doesn't expose that directly.
       // It only gives us the accessor function, which always returns references.
       // We need to be able to distinguish between, the declared member is "int" and accessor is returning "int &"
-      // and, the declared member is "int &" and the accesso ris returning "int &".
+      // and, the declared member is "int &" and the accessor is returning "int &".
       // We do this by passing const and non-const versions of the struct, and check if the accessed type is changing.
       // If the type is changing, it means the member is a value type, so we should clean it.
       // If the type is not changing, it means the member has a reference type, and we should not clean it
