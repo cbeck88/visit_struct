@@ -177,6 +177,13 @@ static_assert(std::is_same<decltype(visit_struct::get<0>(std::declval<test_struc
 static_assert(std::is_same<decltype(visit_struct::get<1>(std::declval<test_struct_two>())), int &&>::value, "");
 static_assert(std::is_same<decltype(visit_struct::get<2>(std::declval<test_struct_two>())), bool &&>::value, "");
 
+static_assert(std::is_same<visit_struct::type_at<0, test_struct_one>, int>::value, "");
+static_assert(std::is_same<visit_struct::type_at<1, test_struct_one>, float>::value, "");
+static_assert(std::is_same<visit_struct::type_at<2, test_struct_one>, std::string>::value, "");
+
+static_assert(std::is_same<visit_struct::type_at<0, test_struct_two>, double>::value, "");
+static_assert(std::is_same<visit_struct::type_at<1, test_struct_two>, int>::value, "");
+static_assert(std::is_same<visit_struct::type_at<2, test_struct_two>, bool>::value, "");
 
 #include <boost/version.hpp>
 

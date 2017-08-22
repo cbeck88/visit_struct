@@ -72,7 +72,7 @@ struct common_type {
 
 // Tag for tag dispatch
 template <typename T>
-struct type_c {};
+struct type_c { using type = T; };
 
 // Accessor type: function object encapsulating a pointer-to-member
 template <typename MemPtr, MemPtr ptr>
@@ -222,6 +222,10 @@ template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>()) {
   return get_accessor<idx, S>();
 }
+
+// Interface (get type, by index)
+template <int idx, typename S>
+using type_at = typename decltype(traits::visitable<traits::clean_t<S>>::type_at(std::integral_constant<int, idx>{}))::type;
 
 /***
  * To implement the VISITABLE_STRUCT macro, we need a map-macro, which can take
@@ -390,6 +394,10 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
       visit_struct::accessor<decltype(&this_type::MEMBER_NAME), &this_type::MEMBER_NAME > {        \
     return {};                                                                                     \
   }                                                                                                \
+                                                                                                   \
+  static auto                                                                                      \
+    type_at(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                              \
+      visit_struct::type_c<decltype(this_type::MEMBER_NAME)>;
 
 
 // This macro specializes the trait, provides "apply" method which does the work.

@@ -179,6 +179,10 @@ public:
     return {};
   }
 
+  template <int idx>
+  static auto type_at(std::integral_constant<int, idx>) ->
+    visit_struct::type_c<typename fusion::result_of::value_at_c<S, idx>::type>;
+
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 

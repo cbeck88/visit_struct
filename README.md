@@ -435,6 +435,12 @@ visit_struct::get_accessor<i>(s);
 Gets the accessor corresponding to the `i`'th visitable element of the struct type `S`.
 
 ```c++
+visit_struct::type_at<i, S>
+```
+
+This template-alias gives the declared type of the `i`'th member of `S`.
+
+```c++
 visit_struct::field_count<S>();
 ```
 

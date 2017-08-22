@@ -330,6 +330,11 @@ struct visitable <T,
     return detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::member_name();
   }
 
+  // Get type
+  template <int idx>
+  static auto type_at(std::integral_constant<int, idx>)
+    -> visit_struct::type_c<typename detail::Find_t<typename T::Visit_Struct_Registered_Members_List__, idx>::value_type>;
+
   static VISIT_STRUCT_CONSTEXPR const bool value = true;
 };
 

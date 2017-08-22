@@ -140,6 +140,10 @@ static_assert(std::is_same<decltype(visit_struct::get_name<2, test::foo>()), con
 static_assert(visit_struct::get_pointer<0, test::foo>() == &test::foo::b, "");
 static_assert(visit_struct::get_pointer<1, test::foo>() == &test::foo::i, "");
 static_assert(visit_struct::get_pointer<2, test::foo>() == &test::foo::f, "");
+static_assert(std::is_same<visit_struct::type_at<0, test::foo>, bool>::value, "");
+static_assert(std::is_same<visit_struct::type_at<1, test::foo>, int>::value, "");
+static_assert(std::is_same<visit_struct::type_at<2, test::foo>, float>::value, "");
+
 
 int main() {
   std::cout << __FILE__ << std::endl;

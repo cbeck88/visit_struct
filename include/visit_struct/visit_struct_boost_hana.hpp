@@ -130,6 +130,10 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
     return hana::second(hana::at(hana::accessors<S>(), hana::size_c<idx>));
   }
 
+  template <int idx>
+  static auto type_at(std::integral_constant<int, idx>) ->
+    visit_struct::type_c<accessor_value_t<decltype(hana::second(hana::at(hana::accessors<S>(), hana::size_c<idx>))), S>>;
+
   static constexpr bool value = true;
 };
 

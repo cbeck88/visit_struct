@@ -195,6 +195,9 @@ static_assert(std::is_same<decltype(visit_struct::get_name<2, test_struct_one>()
 static_assert(visit_struct::get_pointer<0, test_struct_one>() == &test_struct_one::a, "");
 static_assert(visit_struct::get_pointer<1, test_struct_one>() == &test_struct_one::b, "");
 static_assert(visit_struct::get_pointer<2, test_struct_one>() == &test_struct_one::c, "");
+static_assert(std::is_same<visit_struct::type_at<0, test_struct_one>, int>::value, "");
+static_assert(std::is_same<visit_struct::type_at<1, test_struct_one>, float>::value, "");
+static_assert(std::is_same<visit_struct::type_at<2, test_struct_one>, std::string>::value, "");
 
 int main() {
   std::cout << __FILE__ << std::endl;
