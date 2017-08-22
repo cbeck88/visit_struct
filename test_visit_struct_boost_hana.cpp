@@ -27,7 +27,7 @@ struct test_struct_one {
 
 using dummy::test_struct_one;
 
-static_assert(visit_struct::traits::is_visitable<test_struct_one>::value, "WTF");
+static_assert(visit_struct::traits::is_visitable<test_struct_one>::value, "");
 static_assert(visit_struct::field_count<test_struct_one>() == 3, "");
 
 struct test_struct_two {
@@ -39,8 +39,18 @@ struct test_struct_two {
 
 BOOST_HANA_ADAPT_STRUCT(test_struct_two, d, i, b);
 
-static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
+static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "");
 static_assert(visit_struct::field_count<test_struct_two>() == 3, "");
+
+struct test_struct_three {
+  int i1;
+  const int i2;
+};
+
+BOOST_HANA_ADAPT_STRUCT(test_struct_three, i1, i2);
+
+static_assert(visit_struct::traits::is_visitable<test_struct_three>::value, "");
+static_assert(visit_struct::field_count<test_struct_three>() == 2, "");
 
 /***
  * Test visitors
@@ -127,6 +137,10 @@ struct types_visitor {
 
   void operator()(const char *, visit_struct::type_c<int>) {
     result.push_back("int");
+  }
+
+  void operator()(const char *, visit_struct::type_c<const int>) {
+    result.push_back("const int");
   }
 
   void operator()(const char *, visit_struct::type_c<bool>) {
@@ -355,5 +369,13 @@ int main() {
     assert(vis.result[0] == "double");
     assert(vis.result[1] == "int");
     assert(vis.result[2] == "bool");
+  }
+
+  {
+    types_visitor vis;
+    visit_struct::visit_types<test_struct_three>(vis);
+    assert(vis.result.size() == 2);
+    assert(vis.result[0] == "int");
+    assert(vis.result[1] == "const int");
   }
 }

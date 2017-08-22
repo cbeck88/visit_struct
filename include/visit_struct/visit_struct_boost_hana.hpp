@@ -15,6 +15,63 @@ namespace visit_struct {
 
 namespace traits {
 
+// Accessor value-type
+// An accessor is a function object which encapsulates a pointer to member
+// It is generally an overloaded function object:
+// If the pointer type is T S::*, then the function object has the following overloads:
+// S & -> T &
+// const S & -> const T &
+// S && -> T &&
+//
+// When using boost::hana, a struct is defined *only* in terms of a sequence of names and
+// accessors. There is no built-in functionality to obtain the actual member-type T.
+// And the accessor is not required to provide a typedef exposing it.
+//
+// We may attempt to infer it, however, by a decltype expression where we evaluate
+// the accessor. Then we can remove const and reference.
+//
+// However, what if the struct actually contains const members, or reference members?
+// If the member type is actually T & and not T, then the accessor yields:
+//
+// S & -> T &
+// const S & -> T &
+// S && -> T &
+//
+// In other words, if the member type is a reference type, then the const and ref qualifiers of input
+// don't matter.
+//
+// If the member type is actually const T, then the accessor yields:
+//
+// S & -> const T &
+// const S & -> const T &
+// S && -> const T &&
+//
+// Therefore a viable way to infer the value type from the accessor is
+//   1. Check the output types of accessor(S&) and accessor(S&&)
+//   2. If they are the same, the value type is that type
+//   3. If they are different, then remove reference from one of them to obtain the value type. (It shouldn't matter which one.)
+//
+// It's not clear what we should do if, after removing reference from the two test types, we don't get the same type.
+// In current versions we don't check if that's actually the case. It would be reasonable to static_assert that it doesn't happen I think.
+//
+// Also it's worth noting that hana doesn't apparently support structs with reference members, and test code fails compilation
+// with "error: cannot create pointer to reference member" in gcc-6. So this is probably overkill.
+
+template <typename A, typename S>
+struct accessor_value_type {
+  using test1 = decltype(std::declval<A>()(std::declval<S&>()));
+  using test2 = decltype(std::declval<A>()(std::declval<S&&>()));
+  
+  using type = typename std::conditional<std::is_same<test1, test2>::value,
+                        test1,
+                        typename std::remove_reference<test1>::type>::type;
+};
+
+template <typename A, typename S>
+using accessor_value_t = typename accessor_value_type<A, S>::type;
+
+// Hana bindings start here
+
 namespace hana = boost::hana;
 
 template <typename S>
@@ -42,21 +99,7 @@ struct visitable<S, typename std::enable_if<hana::Struct<S>::value>::type>
   template <typename V>
   static constexpr void visit_types(V && v) {
     hana::for_each(hana::accessors<S>(), [&v](auto pair) {
-      // Finding the declared type of the member with hana is tricky because hana doesn't expose that directly.
-      // It only gives us the accessor function, which always returns references.
-      // We need to be able to distinguish between, the declared member is "int" and accessor is returning "int &"
-      // and, the declared member is "int &" and the accessor is returning "int &".
-      // We do this by passing const and non-const versions of the struct, and check if the accessed type is changing.
-      // If the type is changing, it means the member is a value type, so we should clean it.
-      // If the type is not changing, it means the member has a reference type, and we should not clean it
-
-      using test_one = decltype(hana::second(pair)(*static_cast<S *>(nullptr)));
-      using test_two = decltype(hana::second(pair)(*static_cast<const S *>(nullptr)));
-
-      using member_type = typename std::conditional<std::is_same<test_one, test_two>::value,
-                                                    test_one,
-                                                    visit_struct::traits::clean_t<test_one>>::type;
-
+      using member_type = accessor_value_t<decltype(hana::second(pair)), S>;
       std::forward<V>(v)(hana::to<char const *>(hana::first(pair)),
                          visit_struct::type_c<member_type>{});
     });
