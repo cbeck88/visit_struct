@@ -485,7 +485,7 @@ Note that there is no equivalent feature in `fusion` or `hana` to the best of my
 
 ```c++
 visit_struct::for_each(s, v);`
-visit_Struct::for_each(s1, s2, v);`
+visit_struct::for_each(s1, s2, v);`
 ```
 
 This is an alternate syntax for `apply_visitor`. The only difference is that the visitor comes last rather than first.
