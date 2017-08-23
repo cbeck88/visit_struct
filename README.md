@@ -405,15 +405,15 @@ We didn't change our implementation of `apply_visitor`, which works well on all 
 But we have added new functions which allow indexed access to structures, and to the metadata.
 
 - `get`
-
+   
    ```c++
 visit_struct::get<i>(s);
    ```
-
+   
    Gets (a reference to) the `i`'th visitable member of the struct `s`. Index is 0-based. Analogous to `std::get`.
 
 - `get_name`
-
+   
    ```c++
 visit_struct::get_name<i, S>();
 visit_struct::get_name<i>(s);
@@ -423,7 +423,7 @@ visit_struct::get_name<i>(s);
    or if an instance is available that may be passed as an argument, and the type will be deduced.
 
 - `get_pointer`
-
+   
    ```c++
 visit_struct::get_pointer<i, S>();
 visit_struct::get_pointer<i>(s);
@@ -441,13 +441,14 @@ visit_struct::get_accessor<i>(s);
 
 - `type_at`
 
-```c++
+   ```c++
 visit_struct::type_at<i, S>
-```
+   ```
 
    This template-alias gives the declared type of the `i`'th member of `S`.
 
 - `field_count`
+
    ```c++
 visit_struct::field_count<S>();
    ```
