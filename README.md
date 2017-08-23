@@ -456,6 +456,7 @@ This template-alias gives the declared type of the `i`'th member of `S`.
 
 ```c++
 visit_struct::field_count<S>();
+visit_struct::field_count(s);
 ```
 
 Gets a `size_t` which tells how many visitable fields there are.
@@ -469,7 +470,7 @@ visit_struct::get_name<S>();
 visit_struct::get_name(s);
 ```
 
-Gets a string constant representing the name of the structure. The string is, exactly, the token that you passed to the `visit_struct` macro in order to register the structure.
+Gets a string constant representing the name of the structure. The string here is the token that you passed to the `visit_struct` macro in order to register the structure.
 
 This could be useful for error messages. E.g. "Failed to match json input with struct of type 'foo', layout: ..."
 

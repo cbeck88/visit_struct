@@ -209,6 +209,7 @@ int main() {
 
     // Test getters
 
+    assert(visit_struct::field_count(s) == 3);
     assert(visit_struct::get<0>(s) == 5);
     assert(visit_struct::get<1>(s) == 7.5f);
     assert(visit_struct::get<2>(s) == "asdf");
@@ -244,6 +245,7 @@ int main() {
 
     debug_print(t);
 
+    assert(visit_struct::field_count(t) == 3);
     assert(visit_struct::get<0>(t) == 0);
     assert(visit_struct::get<1>(t) == 0.0f);
     assert(visit_struct::get<2>(t) == "jkl");

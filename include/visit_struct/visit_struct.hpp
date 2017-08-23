@@ -94,6 +94,10 @@ VISIT_STRUCT_CONSTEXPR std::size_t field_count()
   return traits::visitable<traits::clean_t<S>>::field_count;
 }
 
+template <typename S>
+VISIT_STRUCT_CONSTEXPR std::size_t field_count(S &&) { return field_count<S>(); }
+
+
 // apply_visitor (one struct instance)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
