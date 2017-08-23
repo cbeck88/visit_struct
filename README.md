@@ -463,10 +463,10 @@ Since the programmer is already taking the trouble of passing this name into a m
 Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
 
 ```c++
-visit_struct::traits::is_visitable<S>
+visit_struct::traits::is_visitable<S>::value
 ```
 
-This type trait can be used to check if a structure is visitable. It should resolve to `std::true_type` or `std::false_type`. I consider it part of the forward-facing interface, you can use it in SFINAE to easily select types that `visit_struct` knows how to use.
+This type trait can be used to check if a structure is visitable. The above expression should resolve to boolean true or false. I consider it part of the forward-facing interface, you can use it in SFINAE to easily select types that `visit_struct` knows how to use.
 
 ## Limits
 
