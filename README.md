@@ -404,69 +404,83 @@ So, we decided that we should support this also.
 We didn't change our implementation of `apply_visitor`, which works well on all targets right now including MSVC 2013.
 But we have added new functions which allow indexed access to structures, and to the metadata.
 
-```c++
+- `get`
+
+   ```c++
 visit_struct::get<i>(s);
-```
+   ```
 
-Gets (a reference to) the `i`'th visitable member of the struct `s`. Index is 0-based. Analogous to `std::get`.
+   Gets (a reference to) the `i`'th visitable member of the struct `s`. Index is 0-based. Analogous to `std::get`.
 
-```c++
+- `get_name`
+
+   ```c++
 visit_struct::get_name<i, S>();
 visit_struct::get_name<i>(s);
-```
+   ```
 
-Gets a string constant representing the name of the `i`'th member of the struct type `S`. The struct type may be passed as a second template parameter,
-or if an instance is available that may be passed as an argument, and the type will be deduced.
+   Gets a string constant representing the name of the `i`'th member of the struct type `S`. The struct type may be passed as a second template parameter,
+   or if an instance is available that may be passed as an argument, and the type will be deduced.
 
-```c++
+- `get_pointer`
+
+   ```c++
 visit_struct::get_pointer<i, S>();
 visit_struct::get_pointer<i>(s);
-```
+   ```
 
-Gets the pointer-to-member for the `i`'th visitable element of the struct type `S`.
+   Gets the pointer-to-member for the `i`'th visitable element of the struct type `S`.
 
-```c++
+- `get_accessor`
+   ```c++
 visit_struct::get_accessor<i, S>();
 visit_struct::get_accessor<i>(s);
-```
+   ```
 
-Gets the accessor corresponding to the `i`'th visitable element of the struct type `S`.
+   Gets the accessor corresponding to the `i`'th visitable element of the struct type `S`.
+
+- `type_at`
 
 ```c++
 visit_struct::type_at<i, S>
 ```
 
-This template-alias gives the declared type of the `i`'th member of `S`.
+   This template-alias gives the declared type of the `i`'th member of `S`.
 
-```c++
+- `field_count`
+   ```c++
 visit_struct::field_count<S>();
-```
+   ```
 
-Gets a `size_t` which tells how many visitable fields there are.
+   Gets a `size_t` which tells how many visitable fields there are.
 
 ## Other functions
 
-```c++
+- `get_name` (no index)
+
+   ```c++
 visit_struct::get_name<S>();
 visit_struct::get_name(s);
-```
+   ```
 
-Gets a string constant representing the name of the structure. The string is, exactly, the token that you passed to the `visit_struct` macro in order to register the structure.
+   Gets a string constant representing the name of the structure. The string is, exactly, the token that you passed to the `visit_struct` macro in order to register the structure.
 
-This could be useful for error messages. E.g. "Failed to match json input with struct of type 'foo', layout: ..."
+   This could be useful for error messages. E.g. "Failed to match json input with struct of type 'foo', layout: ..."
 
-There are other ways to get a name for the type, such as `typeid`, but it has implementation-defined behavior and sometimes gives a mangled name. However, the `visit_struct` name might not
+   There are other ways to get a name for the type, such as `typeid`, but it has implementation-defined behavior and sometimes gives a mangled name. However, the `visit_struct` name might not
 always be acceptable either -- it might contain namespaces, or not, depending on if you use standard or intrusive syntax, for instance.
 
-Since the programmer is already taking the trouble of passing this name into a macro to register the struct, we think we might as well give programmatic access to that string if they want it.
+   Since the programmer is already taking the trouble of passing this name into a macro to register the struct, we think we might as well give programmatic access to that string if they want it.
 
-Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
+   Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
 
-```c++
+- `traits::is_visitable`
+
+   ```c++
 visit_struct::traits::is_visitable<S>::value
-```
+   ```
 
-This type trait can be used to check if a structure is visitable. The above expression should resolve to boolean true or false. I consider it part of the forward-facing interface, you can use it in SFINAE to easily select types that `visit_struct` knows how to use.
+   This type trait can be used to check if a structure is visitable. The above expression should resolve to boolean true or false. I consider it part of the forward-facing interface, you can use it in SFINAE to easily select types that `visit_struct` knows how to use.
 
 ## Limits
 
