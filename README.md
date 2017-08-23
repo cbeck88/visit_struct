@@ -315,7 +315,9 @@ to each struct that your program is expecting, especially to produce good diagno
 an instance, you can get all the type information for the struct, but you don't have to actually instantiate it, which might be complicated or expensive.
 
 
-For instance, the function call
+### `visit_pointers`
+
+The function call
 
 ```c++
 visit_struct::visit_pointers<my_type>(v);
@@ -329,15 +331,15 @@ v("b", &my_type::b);
 v("c", &my_type::c);
 ```
 
-
 These may be especially useful when you have a C++14 compiler which has proper `constexpr` support.
 In that case, these visitations are `constexpr` also, so you can use this
 for some nifty metaprogramming purposes. (For an example, check out [test_fully_visitable.cpp](./test_fully_visitable.cpp).)
 
 There are two alternate versions of this visitation.
 
-In one version, you simply get passed the type, rather
-than the pointer to member.
+### `visit_types`
+
+This function call
 
 ```c++
 visit_struct::visit_types<my_type>(v);
@@ -353,6 +355,8 @@ v("c", visit_struct::type_c<c>());
 
 Here, `type_c` is just a tag, so that your visitor can take appropriate action using tag dispatch.
 This syntax is a little simpler than the pointer to member syntax.
+
+### `visit_accessors`
 
 In the third version, you get passed an "accessor", that is, a function object that implements the function computed by
 the pointer-to-member.
