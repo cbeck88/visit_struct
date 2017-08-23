@@ -254,7 +254,7 @@ int main() {
     assert(visit_struct::get_name<2>(t) == std::string{"c"});
 
     test_visitor_one vis3;
-    visit_struct::apply_visitor(vis3, t);
+    visit_struct::for_each(t, vis3);
 
     assert(vis3.result.size() == 3);
     assert(vis3.result[0].first == "a");

@@ -123,6 +123,31 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
                                                       std::forward<S2>(s2));
 }
 
+// for_each (Alternate syntax for apply_visitor, reverses order of arguments)
+template <typename V, typename S>
+VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S && s, V && v) ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value
+           >::type
+{
+  traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v), std::forward<S>(s));
+}
+
+// for_each with two structure instances
+template <typename S1, typename S2, typename V>
+VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S1 && s1, S2 && s2, V && v) ->
+  typename std::enable_if<
+             traits::is_visitable<
+               traits::clean_t<typename traits::common_type<S1, S2>::type>
+             >::value
+           >::type
+{
+  using common_S = typename traits::common_type<S1, S2>::type;
+  traits::visitable<traits::clean_t<common_S>>::apply(std::forward<V>(v),
+                                                      std::forward<S1>(s1),
+                                                      std::forward<S2>(s2));
+}
+
 // Visit the types (visit_struct::type_c<...>) of the registered members
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto visit_types(V && v) ->

@@ -179,7 +179,7 @@ int main() {
     s.i = 19;
     s.f = -1.5f;
 
-    visit_struct::apply_visitor(vis, s);
+    visit_struct::for_each(s, vis);
 
     assert(vis.names.size() == 6);
     assert(vis.values.size() == 6);

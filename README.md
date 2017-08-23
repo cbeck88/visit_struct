@@ -481,6 +481,32 @@ Since the programmer is already taking the trouble of passing this name into a m
 
 Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
 
+### `for_each`
+
+```c++
+visit_struct::for_each(s, v);`
+visit_Struct::for_each(s1, s2, v);`
+```
+
+This is an alternate syntax for `apply_visitor`. The only difference is that the visitor comes last rather than first.
+
+In C++14 one may often use generic lambdas. Then the code is a little more readable if the lambda comes last, since it may span several lines of code.
+
+Besides this, it is conceptually more like a for-loop -- the bounds of the loop come first, which are the structure, then the body of the loop, which is repeated.
+
+(I won't say I wasn't influenced by ldionne's opinion. He makes this same point in the boost::hana docs [here](http://www.boost.org/doc/libs/1_63_0/libs/hana/doc/html/index.html#tutorial-rationales-parameters).)
+
+So, using `for_each` our initial example of debug printing a structure can look like this:
+
+```c++
+visit_struct::for_each(my_struct,
+                       [](const char * name, auto && value) {
+                         std::cerr << name << ": " << value << std::endl;
+                       });
+```
+
+Nowadays I prefer this syntax.  The original `apply_visitor` syntax isn't going to be deprecated or broken though.
+
 ### `traits::is_visitable`
 
 ```c++
