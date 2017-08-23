@@ -87,14 +87,14 @@ struct accessor {
 // User-interface
 //
 
-// Expose number of fields in a visitable struct
+// Return number of fields in a visitable struct
 template <typename S>
 VISIT_STRUCT_CONSTEXPR std::size_t field_count()
 {
   return traits::visitable<traits::clean_t<S>>::field_count;
 }
 
-// Interface (one instance)
+// apply_visitor (one struct instance)
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   typename std::enable_if<
@@ -104,7 +104,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
   traits::visitable<traits::clean_t<S>>::apply(std::forward<V>(v), std::forward<S>(s));
 }
 
-// Interface (two instances)
+// apply_visitor (two struct instances)
 template <typename S1, typename S2, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
   typename std::enable_if<
@@ -119,7 +119,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
                                                       std::forward<S2>(s2));
 }
 
-// Interface: visit the types (visit_struct::type_c<...>) of the registered members
+// Visit the types (visit_struct::type_c<...>) of the registered members
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto visit_types(V && v) ->
   typename std::enable_if<
@@ -129,7 +129,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto visit_types(V && v) ->
   traits::visitable<traits::clean_t<S>>::visit_types(std::forward<V>(v));
 }
 
-// Interface: visit the member pointers (&S::a) of the registered members
+// Visit the member pointers (&S::a) of the registered members
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto visit_pointers(V && v) ->
   typename std::enable_if<
@@ -139,7 +139,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto visit_pointers(V && v) ->
   traits::visitable<traits::clean_t<S>>::visit_pointers(std::forward<V>(v));
 }
 
-// Interface: visit the accessors (function objects) of the registered members
+// Visit the accessors (function objects) of the registered members
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto visit_accessors(V && v) ->
   typename std::enable_if<
@@ -150,8 +150,8 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto visit_accessors(V && v) ->
 }
 
 
-// Interface (apply visitor with no instances)
-// This calls visit_pointers for backwards compat reasons
+// Apply visitor (with no instances)
+// This calls visit_pointers, for backwards compat reasons
 template <typename S, typename V>
 VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
   typename std::enable_if<
@@ -162,7 +162,7 @@ VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
 }
 
 
-// Interface (like std::get for tuples)
+// Get value by index (like std::get for tuples)
 template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get(S && s) ->
   typename std::enable_if<
@@ -173,9 +173,7 @@ VISIT_STRUCT_CONSTEXPR auto get(S && s) ->
   return traits::visitable<traits::clean_t<S>>::get_value(std::integral_constant<int, idx>{}, std::forward<S>(s));
 }
 
-// Interface (get name instead of value)
-// (This doesn't just return char *, it returns a constexpr reference to a character array,
-//  to allow you to actually read  he characters in a constexpr computation.)
+// Get name of field, by index
 template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get_name() ->
   typename std::enable_if<
@@ -191,7 +189,7 @@ VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<idx, S>()) {
   return get_name<idx, S>();
 }
 
-// Interface (get member pointer, by index)
+// Get member pointer, by index
 template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get_pointer() ->
   typename std::enable_if<
@@ -207,7 +205,7 @@ VISIT_STRUCT_CONSTEXPR auto get_pointer(S &&) -> decltype(get_pointer<idx, S>())
   return get_pointer<idx, S>();
 }
 
-// Interface (get member accessor, by index)
+// Get member accessor, by index
 template <int idx, typename S>
 VISIT_STRUCT_CONSTEXPR auto get_accessor() ->
   typename std::enable_if<
@@ -223,7 +221,7 @@ VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>(
   return get_accessor<idx, S>();
 }
 
-// Interface (get type, by index)
+// Get type, by index
 template <int idx, typename S>
 struct type_at_s {
   using type_c = decltype(traits::visitable<traits::clean_t<S>>::type_at(std::integral_constant<int, idx>{}));
@@ -233,7 +231,7 @@ struct type_at_s {
 template <int idx, typename S>
 using type_at = typename type_at_s<idx, S>::type;
 
-// Interface (get name of structure)
+// Get name of structure
 template <typename S>
 VISIT_STRUCT_CONSTEXPR auto get_name() ->
   typename std::enable_if<
