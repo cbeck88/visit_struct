@@ -171,6 +171,12 @@ However, our library can be used as a single-header, header-only library with no
 The core `visit_struct.hpp` is in total about three hundred lines of code, depending on how you count,
 and is fully functional on its own. For some applications, `visit_struct` is all that you need.
 
+Additionally, the syntax for doing this kind of visitations is (IMO) a little nicer than in `fusion`
+or `hana`. And `visit_struct` has much better compiler support right now than `hana`. `hana` requires
+a high level of conformance to C++14. It only supports `gcc-6` and up for instance, and doesn't work with
+any versions of MSVC. (Its support on `clang` is quite good.) `visit_struct` can be used with
+many "first generation C++11 compilers" that are now quite old, like `gcc-4.8` and MSVC 2013.
+
 **Note:** The macro `VISITABLE_STRUCT` must be used at filescope, an error will occur if it is
 used within a namespace. You can simply include the namespaces as part of the type, e.g.
 
