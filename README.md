@@ -400,12 +400,11 @@ If you think you need the fusion or hana compatibility, then you should probably
 `for_each` is quite powerful, and by crafting special visitors, there is a lot that you can do with it.
 
 However, one thing that you cannot easily do is implement `std::tuple`
-methods, like `std::get<i>` to get the `i`'th member of the struct. By contrast, `for_each`
-could be implemented with relative ease in C++11 using `std::get` and variadic templates,
-so arguably this is a more fundamental operation. Indeed, most if not all libraries that support struct-field reflection support this in some way.
+methods, like `std::get<i>` to get the `i`'th member of the struct.
+Most if not all libraries that support struct-field reflection support this in some way.
 So, we decided that we should support this also.
 
-We didn't change our implementation of `for_each`, which works even on compilers that don't have variadic templates.
+We didn't change our implementation of `for_each`, which works well on all targets.
 But we have added new functions which allow indexed access to structures, and to the metadata.
 
 ### `get`
