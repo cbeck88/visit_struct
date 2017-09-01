@@ -48,7 +48,7 @@ each member of the struct:
 
 ```c++
 template <typename V>
-void visit(V && v, const my_type & my_struct) {
+void visit(const my_type & my_struct, V && v) {
   v("a", my_struct.a);
   v("b", my_struct.b);
   v("c", my_struct.c);
@@ -96,8 +96,8 @@ That's also quite a bit of repetitive code, and the whole point of this is to re
 Again, ideally we would be able to do something totally generic, like,
 
 ```c++
-template <typename V, typename S>
-void apply_visitor(V && v, S && s) {
+template <typename S, typename V>
+void for_each(S && s, V && v) {
   for (auto && member : s) {
     v(member.name, member.value);
   }
@@ -110,7 +110,7 @@ Unfortunately, current versions of C++ *lack reflection*. It's not possible
 to *programmatically inspect* the list of members of a generic class type `S`, using templates or
 anything else standard, even if `S` is a complete type (in which case, the compiler obviously
 knows its members). If we're lucky we might get something like this in C++20, but right
-now there's no way to actually implement the fully generic `apply_visitor`.
+now there's no way to actually implement the fully generic `for_each`.
 
 ## Overview
 
@@ -135,43 +135,42 @@ struct debug_printer {
 };
 
 void debug_print(const my_type & my_struct) {
-  visit_struct::apply_visitor(debug_printer{}, my_struct);
+  visit_struct::for_each(my_struct, debug_printer{});
 }
 ```
 
-Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::apply_visitor`
+Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::for_each`
 for your structure.
 
 In C++14 this can be made more succinct using a lambda:
 
 ```c++
-const auto debug_printer = [](const char * name, const auto & value) {
-  std::cerr << name << ": " << value << std::endl;
-};
-
 void debug_print(const my_type & my_struct) {
-  visit_struct::apply_visitor(debug_printer, my_struct);
+  visit_struct::for_each(my_struct,
+    [](const char * name, const auto & value) {
+      std::cerr << name << ": " << value << std::endl;
+    });
 }
 ```
 
-These two things, the macro `VISITABLE_STRUCT` and the function `visit_struct::apply_visitor`,
-are basically the whole library.
+These two things, the macro `VISITABLE_STRUCT` and the function `visit_struct::for_each`,
+represent most of the library.
 
-A nice feature of `visit_struct` is that `apply_visitor` always respects the
+A nice feature of `visit_struct` is that `for_each` always respects the
 C++11 value category of it's arguments.
 That is, if `my_struct` is a const l-value reference, non-const l-value reference, or r-value
-reference, then `apply_visitor` will pass each of the fields to the visitor correspondingly,
+reference, then `for_each` will pass each of the fields to the visitor correspondingly,
 and the visitor is also forwarded properly.
 
 It should be noted that there are already libraries that permit iterating over a structure like
 this, such as `boost::fusion`, which does this and much more. Or `boost::hana`, which is like
-a more modern successor to `boost::fusion` which takes advantage of C++14.
+a modern successor to `boost::fusion` which takes advantage of C++14.
 
 However, our library can be used as a single-header, header-only library with no external dependencies.
-The core `visit_struct.hpp` is in total about three hundred lines of code, depending on how you count,
+The core `visit_struct.hpp` is in total about four hundred lines of code, depending on how you count,
 and is fully functional on its own. For some applications, `visit_struct` is all that you need.
 
-Additionally, the syntax for doing this kind of visitations is (IMO) a little nicer than in `fusion`
+Additionally, the syntax for doing these kind of visitations is (IMO) a little nicer than in `fusion`
 or `hana`. And `visit_struct` has much better compiler support right now than `hana`. `hana` requires
 a high level of conformance to C++14. It only supports `gcc-6` and up for instance, and doesn't work with
 any versions of MSVC. (Its support on `clang` is quite good.) `visit_struct` can be used with
@@ -187,7 +186,7 @@ VISITABLE_STRUCT(foo::bar::baz, a, b, c);
 ## Compatibility with `boost::fusion`
 
 **visit_struct** also has support code so that it can be used with "fusion-adapted structures".
-That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct::apply_visitor`,
+That is, any structure that `boost::fusion` knows about, can also be used with `visit_struct::for_each`,
 if you include the extra header.  
 
 `#include <visit_struct/visit_struct_boost_fusion.hpp>`
@@ -226,8 +225,8 @@ struct my_type {
 ```
 
 There are no additional data members defined within the type, although there are
-some "secret" static declarations which are occurring. That's why it's "intrusive".
-There is still no run-time overhead.
+some "secret" static declarations which are occurring. (Basically, a bunch of typedef's.)
+That's why it's "intrusive". There is still no run-time overhead.
 
 Each line above expands to a separate series of declarations within the body of `my_type`, and arbitrary other C++
 declarations may appear between them.
@@ -254,7 +253,7 @@ struct my_type {
 };
 ```
 
-When `visit_struct::apply_visitor` is used, each member declared with `VISITABLE`
+When `visit_struct::for_each` is used, each member declared with `VISITABLE`
 will be visited, in the order that they are declared.
 
 The benefits of this version are that, you don't need to type all the member
@@ -267,15 +266,12 @@ project and you can't change its definition.
 
 ## Binary Vistation
 
-**visit_struct** also supports visiting two instances of the same struct at once.
-
-The syntax is similar to that of `boost::variant` -- the visitor comes first,
-then two the structure instances.
+**visit_struct** also supports visiting two instances of the same struct type at once.
 
 For instance, the function call
 
 ```c++
-visit_struct::apply_visitor(v, s1, s2);
+visit_struct::for_each(s1, s2, v);
 ```
 
 is similar to
@@ -304,7 +300,7 @@ struct eq_visitor {
 template <typename T>
 bool struct_eq(const T & t1, const T & t2) {
   eq_visitor vis;
-  visit_struct::apply_visitor(vis, t1, t2);
+  visit_struct::for_each(t1, t2, vis);
   return vis.result;
 }
 ```
@@ -401,17 +397,15 @@ If you think you need the fusion or hana compatibility, then you should probably
 
 ## Tuple Methods, Indexed Access
 
-For a long time, `apply_visitor` was the only function in the library. It's quite
-powerful and everything that I needed to do could be done using it comfortably.
-I like having a really small API.
+`for_each` is quite powerful, and by crafting special visitors, there is a lot that you can do with it.
 
-However, one thing that you cannot easily use `apply_visitor` to do is implement `std::tuple`
-methods, like `std::get<i>` to get the `i`'th member of the struct. By contrast, `apply_visitor`
+However, one thing that you cannot easily do is implement `std::tuple`
+methods, like `std::get<i>` to get the `i`'th member of the struct. By contrast, `for_each`
 could be implemented with relative ease in C++11 using `std::get` and variadic templates,
 so arguably this is a more fundamental operation. Indeed, most if not all libraries that support struct-field reflection support this in some way.
 So, we decided that we should support this also.
 
-We didn't change our implementation of `apply_visitor`, which works well on all targets right now including MSVC 2013.
+We didn't change our implementation of `for_each`, which works even on compilers that don't have variadic templates.
 But we have added new functions which allow indexed access to structures, and to the metadata.
 
 ### `get`
@@ -487,31 +481,25 @@ Since the programmer is already taking the trouble of passing this name into a m
 
 Note that there is no equivalent feature in `fusion` or `hana` to the best of my knowledge, so there's no support for this in the compatibility headers.
 
-### `for_each`
+### `apply_visitor`
 
 ```c++
-visit_struct::for_each(s, v);`
-visit_struct::for_each(s1, s2, v);`
+visit_struct::apply_visitor(v, s);`
+visit_struct::apply_visitor(v, s1, s2);`
 ```
 
-This is an alternate syntax for `apply_visitor`. The only difference is that the visitor comes last rather than first.
+This is an alternate syntax for `for_each`. The only difference is that the visitor comes first rather than last.
 
-In C++14 one may often use generic lambdas. Then the code is a little more readable if the lambda comes last, since it may span several lines of code.
+Historically, `apply_visitor` is a much older part of `visit_struct` than `for_each`. Its syntax is similar to `boost::apply_visitor` from the `boost::variant` library.
+For a long time, `apply_visitor` was the only function in the library.
 
-Besides this, it is conceptually more like a for-loop -- the bounds of the loop come first, which are the structure, then the body of the loop, which is repeated.
+However, experience has shown that `for_each` is little nicer syntax than `apply_visitor`. It reads more like a for loop -- the bounds of the loop come first, which are the structure, then the body of the loop, which is repeated.
 
-(I won't say I wasn't influenced by ldionne's opinion. He makes this same point in the boost::hana docs [here](http://www.boost.org/doc/libs/1_63_0/libs/hana/doc/html/index.html#tutorial-rationales-parameters).)
+Additionally, in C++14 one may often use generic lambdas. Then the code is a little more readable if the lambda comes last, since it may span several lines of code.
 
-So, using `for_each` our initial example of debug printing a structure can look like this:
+(I won't say I wasn't influenced by ldionne's opinion. He makes this same point in the `boost::hana` docs [here](http://www.boost.org/doc/libs/1_63_0/libs/hana/doc/html/index.html#tutorial-rationales-parameters).)
 
-```c++
-visit_struct::for_each(my_struct,
-                       [](const char * name, auto && value) {
-                         std::cerr << name << ": " << value << std::endl;
-                       });
-```
-
-Nowadays I prefer this syntax.  The original `apply_visitor` syntax isn't going to be deprecated or broken though.
+So, nowadays I prefer and recommend `for_each`.  The original `apply_visitor` syntax isn't going to be deprecated or broken though.
 
 ### `traits::is_visitable`
 
