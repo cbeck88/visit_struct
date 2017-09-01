@@ -68,7 +68,7 @@ void log_func(const char * name, const T & value) {
   std::cerr << name << ": " << value << std::endl;
 }
 
-visit(log_func, my_struct);
+visit(my_struct, log_func);
 ```
 
 Using a template function here means that even though a struct may contain several different types, the compiler
@@ -98,6 +98,7 @@ Again, ideally we would be able to do something totally generic, like,
 ```c++
 template <typename S, typename V>
 void for_each(S && s, V && v) {
+  // Insert magic here...
   for (auto && member : s) {
     v(member.name, member.value);
   }
@@ -111,6 +112,9 @@ to *programmatically inspect* the list of members of a generic class type `S`, u
 anything else standard, even if `S` is a complete type (in which case, the compiler obviously
 knows its members). If we're lucky we might get something like this in C++20, but right
 now there's no way to actually implement the fully generic `for_each`.
+
+This means that any implementation of `for_each` requires some help, usually in the form of *registration macros*
+or similar.
 
 ## Overview
 
@@ -139,7 +143,7 @@ void debug_print(const my_type & my_struct) {
 }
 ```
 
-Here, the macro `VISITABLE_STRUCT` defines overloads of `visit_struct::for_each`
+Intuitively, you can think that the macro `VISITABLE_STRUCT` is defining overloads of `visit_struct::for_each`
 for your structure.
 
 In C++14 this can be made more succinct using a lambda:
@@ -483,8 +487,8 @@ Note that there is no equivalent feature in `fusion` or `hana` to the best of my
 ### `apply_visitor`
 
 ```c++
-visit_struct::apply_visitor(v, s);`
-visit_struct::apply_visitor(v, s1, s2);`
+visit_struct::apply_visitor(v, s);
+visit_struct::apply_visitor(v, s1, s2);
 ```
 
 This is an alternate syntax for `for_each`. The only difference is that the visitor comes first rather than last.
