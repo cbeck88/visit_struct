@@ -158,7 +158,7 @@ void debug_print(const my_type & my_struct) {
 ```
 
 These two things, the macro `VISITABLE_STRUCT` and the function `visit_struct::for_each`,
-represent most of the library.
+represent the most important functionality of the library.
 
 A nice feature of `visit_struct` is that `for_each` always respects the
 C++11 value category of it's arguments.
