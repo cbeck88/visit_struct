@@ -194,7 +194,7 @@ struct member_helper {
 
   template <typename V>
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor) {
-    std::forward<V>(visitor)(M::member_name(), M::accessor_t());
+    std::forward<V>(visitor)(M::member_name(), typename M::accessor_t());
   }
 
   template <typename V>
@@ -296,6 +296,11 @@ struct visitable <T,
   template <typename V>
   static VISIT_STRUCT_CXX14_CONSTEXPR void visit_types(V && v) {
     detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::visit_types(std::forward<V>(v));
+  }
+
+  template <typename V>
+  static VISIT_STRUCT_CXX14_CONSTEXPR void visit_accessors(V && v) {
+    detail::structure_helper<typename T::Visit_Struct_Registered_Members_List__>::visit_accessors(std::forward<V>(v));
   }
 
   // Get pointer
