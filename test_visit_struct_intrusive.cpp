@@ -68,6 +68,19 @@ struct test_visitor_type {
 };
 
 
+template <typename S>
+struct test_visitor_acc {
+  test_visitor_type internal;
+
+  template <typename A>
+  void operator()(const char* name, A && a) {
+    using result_t = visit_struct::traits::clean_t<decltype(a(std::declval<S>()))>;
+    internal(name, visit_struct::type_c<result_t>{});
+  }
+};
+
+
+
 struct test_visitor_three {
   int result = 0;
 
@@ -238,6 +251,21 @@ int main() {
     test_visitor_type vis;
 
     visit_struct::visit_types<test::foo>(vis);
+    assert(vis.result.size() == 3u);
+    assert(vis.result[0].first == "b");
+    assert(vis.result[0].second == "bool");
+    assert(vis.result[1].first == "i");
+    assert(vis.result[1].second == "int");
+    assert(vis.result[2].first == "f");
+    assert(vis.result[2].second == "float");
+  }
+
+  {
+    test_visitor_acc<test::foo> vis2;
+
+    visit_struct::visit_accessors<test::foo>(vis2);
+    auto & vis = vis2.internal;
+
     assert(vis.result.size() == 3u);
     assert(vis.result[0].first == "b");
     assert(vis.result[0].second == "bool");
