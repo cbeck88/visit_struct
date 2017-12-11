@@ -414,25 +414,25 @@ We didn't change our implementation of `for_each`, which works well on all targe
 But we have added new functions which allow indexed access to structures, and to the metadata.
 
 ### `get`
-   
+
 ```c++
 visit_struct::get<i>(s);
 ```
-   
+
 Gets (a reference to) the `i`'th visitable member of the struct `s`. Index is 0-based. Analogous to `std::get`.
 
 ### `get_name`
-   
+
 ```c++
 visit_struct::get_name<i, S>();
 visit_struct::get_name<i>(s);
 ```
 
-Gets a string constant representing the name of the `i`'th member of the struct type `S`. The struct type may be passed as a second template parameter,
-or if an instance is available that may be passed as an argument, and the type will be deduced.
+Gets a string constant representing the name of the `i`'th member of the struct type `S`. The struct type may be passed as a second template parameter.
+If an instance is available, it may be passed as an argument, and the struct type will be deduced (the argument will not be accessed).
 
 ### `get_pointer`
-   
+
 ```c++
 visit_struct::get_pointer<i, S>();
 visit_struct::get_pointer<i>(s);
@@ -455,7 +455,7 @@ Gets the accessor corresponding to the `i`'th visitable element of the struct ty
 visit_struct::type_at<i, S>
 ```
 
-This template-alias gives the declared type of the `i`'th member of `S`.
+This alias template gives the declared type of the `i`'th member of `S`.
 
 ### `field_count`
 
