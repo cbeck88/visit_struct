@@ -206,7 +206,38 @@ It may help if you are migrating from one library to the other.
 
 ## "Intrusive" Syntax
 
-An additional header is provided, `visit_struct_intrusive.hpp` which permits the following alternate syntax:
+A drawback of the basic syntax is that you have to repeat the field member names.
+
+This introduces a maintenance burden: What if someone adds a field member and doesn't update
+the list?
+
+1. It is possible to write a static assertion that all of the members are registered, by comparing
+   sizeof the struct with what it should be given the known registered members. (See [test_fully_visitable.cpp](./test_fully_visitable.cpp) )
+2. It may be *useful* to register only a subset of the field members for serialization.
+3. It may be a requirement for you that you cannot change the header where the struct is defined, and you still want to visit it, so the
+   first syntax may be pretty much the only option for you.
+
+However, none of these changes the fact that with the first syntax, you have to write the names twice.
+
+If visit_struct were e.g. a clang plugin instead of a header-only library, then perhaps we could make the syntax look like this:
+
+```c++
+struct my_type {
+  __attribute__("visitable") int a;
+  __attribute__("visitable") float b;
+  __attribute__("visitable") std::string c;
+};
+
+void debug_print(const my_type & my_struct) {
+  __builtin_visit_struct(my_struct,
+    [](const char * name, const auto & member) {
+      std::cout << name << ": " << member << std::endl;
+    });
+}
+```
+
+We don't offer a clang plugin like this, but we do offer an additional header,
+ `visit_struct_intrusive.hpp` which uses macros to get pretty close to this syntax, and which is portable:
 
 ```c++
 struct my_type {
