@@ -200,6 +200,9 @@ static_assert(std::is_same<visit_struct::type_at<1, test_struct_one>, float>::va
 static_assert(std::is_same<visit_struct::type_at<2, test_struct_one>, std::string>::value, "");
 
 int main() {
+  // Test version string
+  std::cout << VISIT_STRUCT_VERSION_STRING << std::endl;
+
   std::cout << __FILE__ << std::endl;
 
   {
