@@ -4,7 +4,7 @@
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/6ksqg7es938cttn2/branch/master?svg=true)](https://ci.appveyor.com/project/cbeck88/visit_struct)
 [![Boost licensed](https://img.shields.io/badge/license-Boost-blue.svg)](./LICENSE)
 
-A header-only library providing **structure visitors** for C++11.
+A header-only library providing **structure visitors** for C++11 and C++14.
 
 ## Motivation
 
