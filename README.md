@@ -560,7 +560,7 @@ These limits can both be increased, see the source comments and also [IMPLEMENTA
 **visit_struct** targets C++11 -- you need to have r-value references at least, and for the intrusive syntax, you need
 variadic templates also.
 
-**visit_struct** works with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`.
+**visit_struct** is known to work with versions of gcc `>= 4.8.2` and versions of clang `>= 3.5`.
 
 The appveyor build tests against MSVC 2013, 2015, 2017.
 
