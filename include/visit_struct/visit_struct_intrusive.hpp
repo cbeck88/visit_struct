@@ -398,6 +398,24 @@ static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBE
   Visit_Struct_Get_Visitables__(::visit_struct::detail::Rank<VISIT_STRUCT_GET_REGISTERED_MEMBERS::size + 1>);    \
 static_assert(true, "")
 
+// use variadic macro to allow passing initializer lists with commas, e.g.:
+// VISITABLE_DIRECT_INIT(std::vector<int>, foo, {1, 2, 3})
+#define VISITABLE_DIRECT_INIT(TYPE, NAME, INITIALIZER...)                                                        \
+TYPE NAME INITIALIZER;                                                                                           \
+struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                                                     \
+  visit_struct::detail::member_ptr_helper<VISIT_STRUCT_CURRENT_TYPE,                                             \
+                                          TYPE,                                                                  \
+                                          &VISIT_STRUCT_CURRENT_TYPE::NAME>                                      \
+{                                                                                                                \
+  static VISIT_STRUCT_CONSTEXPR const ::visit_struct::detail::char_array<sizeof(#NAME)> & member_name() {        \
+    return #NAME;                                                                                                \
+  }                                                                                                              \
+};                                                                                                               \
+static inline ::visit_struct::detail::Append_t<VISIT_STRUCT_GET_REGISTERED_MEMBERS,                              \
+                                               VISIT_STRUCT_MAKE_MEMBER_NAME(NAME)>                              \
+  Visit_Struct_Get_Visitables__(::visit_struct::detail::Rank<VISIT_STRUCT_GET_REGISTERED_MEMBERS::size + 1>);    \
+static_assert(true, "")
+
 #define END_VISITABLES                                                                                           \
 typedef VISIT_STRUCT_GET_REGISTERED_MEMBERS Visit_Struct_Registered_Members_List__;                              \
 typedef ::visit_struct::detail::intrusive_tag Visit_Struct_Visitable_Structure_Tag__;                            \
