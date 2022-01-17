@@ -400,8 +400,8 @@ static_assert(true, "")
 
 // use variadic macro to allow passing initializer lists with commas, e.g.:
 // VISITABLE_DIRECT_INIT(std::vector<int>, foo, {1, 2, 3})
-#define VISITABLE_DIRECT_INIT(TYPE, NAME, INITIALIZER...)                                                        \
-TYPE NAME INITIALIZER;                                                                                           \
+#define VISITABLE_DIRECT_INIT(TYPE, NAME, ...)                                                                   \
+TYPE NAME __VA_ARGS__;                                                                                           \
 struct VISIT_STRUCT_MAKE_MEMBER_NAME(NAME) :                                                                     \
   visit_struct::detail::member_ptr_helper<VISIT_STRUCT_CURRENT_TYPE,                                             \
                                           TYPE,                                                                  \
