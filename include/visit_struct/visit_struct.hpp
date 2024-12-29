@@ -49,10 +49,10 @@
 
 // After C++20 we can use __VA_OPT__ and can also visit empty struct
 # ifndef VISIT_STRUCT_PP_HAS_VA_OPT
-#   if (!defined __cplusplus) || (__cplusplus < 202000L)
-#     define VISIT_STRUCT_PP_HAS_VA_OPT false
-#   else
+#   if (defined _MSVC_TRADITIONAL && !_MSVC_TRADITIONAL) || (defined __cplusplus && __cplusplus >= 202000L)
 #     define VISIT_STRUCT_PP_HAS_VA_OPT true
+#   else
+#     define VISIT_STRUCT_PP_HAS_VA_OPT false
 #   endif
 # endif
 
@@ -336,24 +336,22 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
           29, 28, 27, 26, 25, 24, 23, 22, 21, 20,  \
           19, 18, 17, 16, 15, 14, 13, 12, 11, 10,  \
           9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
-#else // VISIT_STRUCT_PP_HAS_VA_OPT
+#else
   #define VISIT_STRUCT_PP_NARG(...) VISIT_STRUCT_EXPAND(VISIT_STRUCT_PP_ARG_N(0, __VA_ARGS__,  \
-          69, 68, 67, 66, 65, 64, 63, 62, 61, 60,  \
-          59, 58, 57, 56, 55, 54, 53, 52, 51, 50,  \
-          49, 48, 47, 46, 45, 44, 43, 42, 41, 40,  \
-          39, 38, 37, 36, 35, 34, 33, 32, 31, 30,  \
-          29, 28, 27, 26, 25, 24, 23, 22, 21, 20,  \
-          19, 18, 17, 16, 15, 14, 13, 12, 11, 10,  \
-          9, 8, 7, 6, 5, 4, 3, 2, 1))
-#endif // VISIT_STRUCT_PP_HAS_VA_OPT
+        69, 68, 67, 66, 65, 64, 63, 62, 61, 60,  \
+        59, 58, 57, 56, 55, 54, 53, 52, 51, 50,  \
+        49, 48, 47, 46, 45, 44, 43, 42, 41, 40,  \
+        39, 38, 37, 36, 35, 34, 33, 32, 31, 30,  \
+        29, 28, 27, 26, 25, 24, 23, 22, 21, 20,  \
+        19, 18, 17, 16, 15, 14, 13, 12, 11, 10,  \
+        9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+#endif
 
 /* need extra level to force extra eval */
 #define VISIT_STRUCT_CONCAT_(a,b) a ## b
 #define VISIT_STRUCT_CONCAT(a,b) VISIT_STRUCT_CONCAT_(a,b)
 
-#if VISIT_STRUCT_PP_HAS_VA_OPT
-  #define VISIT_STRUCT_APPLYF0(f)
-#elif
+#define VISIT_STRUCT_APPLYF0(f)
 #define VISIT_STRUCT_APPLYF1(f,_1) f(_1)
 #define VISIT_STRUCT_APPLYF2(f,_1,_2) f(_1) f(_2)
 #define VISIT_STRUCT_APPLYF3(f,_1,_2,_3) f(_1) f(_2) f(_3)
