@@ -19,7 +19,7 @@
 
 #define VISIT_STRUCT_VERSION_MAJOR 1
 #define VISIT_STRUCT_VERSION_MINOR 1
-#define VISIT_STRUCT_VERSION_PATCH 1
+#define VISIT_STRUCT_VERSION_PATCH 2
 
 #define VISIT_STRUCT_STRING_HELPER(X) #X
 #define VISIT_STRUCT_STRING(X) VISIT_STRUCT_STRING_HELPER(X)
@@ -101,6 +101,8 @@ struct accessor {
   VISIT_STRUCT_CONSTEXPR auto operator()(T && t) const -> decltype(std::forward<T>(t).*ptr) {
     return std::forward<T>(t).*ptr;
   }
+
+  static VISIT_STRUCT_CONSTEXPR const auto value = ptr;
 };
 
 //
