@@ -9,11 +9,8 @@
 #include <visit_struct/visit_struct.hpp>
 
 #include <boost/mpl/range_c.hpp>
-#include <boost/fusion/include/for_each.hpp>
-#include <boost/fusion/include/zip.hpp>
-#include <boost/fusion/include/at_c.hpp>
+#include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/adapted.hpp>
-#include <boost/fusion/include/mpl.hpp>
 
 #include <utility>
 
@@ -130,7 +127,7 @@ public:
     using Indices = mpl::range_c<unsigned, 0, fusion::result_of::size<S>::value >;
     using fv_t = fusion_visitor<decltype(std::forward<V>(v)), decltype(std::forward<T>(t))>;
     fv_t fv{std::forward<V>(v), std::forward<T>(t)};
-    fusion::for_each(Indices(), fv);
+    fusion::for_each(Indices(), std::move(fv));
   }
 
   template <typename V, typename T1, typename T2>
