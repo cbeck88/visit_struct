@@ -308,18 +308,18 @@ struct context {
 
     // Return number of fields in a visitable struct
     template <typename S>
-    VISIT_STRUCT_CONSTEXPR std::size_t field_count()
+    VISIT_STRUCT_CONSTEXPR static std::size_t field_count()
     {
       return traits::visitable<traits::clean_t<S>, CONTEXT>::field_count;
     }
 
     template <typename S>
-    VISIT_STRUCT_CONSTEXPR std::size_t field_count(S &&) { return field_count<S>(); }
+    VISIT_STRUCT_CONSTEXPR static std::size_t field_count(S &&) { return field_count<S>(); }
 
 
     // apply_visitor (one struct instance)
     template <typename S, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto apply_visitor(V && v, S && s) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -329,7 +329,7 @@ struct context {
 
     // apply_visitor (two struct instances)
     template <typename S1, typename S2, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
       typename std::enable_if<
                  traits::is_visitable<
                    traits::clean_t<typename traits::common_type<S1, S2>::type>,
@@ -345,7 +345,7 @@ struct context {
 
     // for_each (Alternate syntax for apply_visitor, reverses order of arguments)
     template <typename V, typename S>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S && s, V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto for_each(S && s, V && v) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -355,7 +355,7 @@ struct context {
 
     // for_each with two structure instances
     template <typename S1, typename S2, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S1 && s1, S2 && s2, V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto for_each(S1 && s1, S2 && s2, V && v) ->
       typename std::enable_if<
                  traits::is_visitable<
                    traits::clean_t<typename traits::common_type<S1, S2>::type>,
@@ -371,7 +371,7 @@ struct context {
 
     // Visit the types (visit_struct::type_c<...>) of the registered members
     template <typename S, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_types(V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto visit_types(V && v) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -381,7 +381,7 @@ struct context {
 
     // Visit the member pointers (&S::a) of the registered members
     template <typename S, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_pointers(V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto visit_pointers(V && v) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -391,7 +391,7 @@ struct context {
 
     // Visit the accessors (function objects) of the registered members
     template <typename S, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_accessors(V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto visit_accessors(V && v) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -403,7 +403,7 @@ struct context {
     // Apply visitor (with no instances)
     // This calls visit_pointers, for backwards compat reasons
     template <typename S, typename V>
-    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
+    VISIT_STRUCT_CXX14_CONSTEXPR static auto apply_visitor(V && v) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
                >::type
@@ -414,7 +414,7 @@ struct context {
 
     // Get value by index (like std::get for tuples)
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get(S && s) ->
+    VISIT_STRUCT_CONSTEXPR static auto get(S && s) ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>>::value,
                  decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_value(std::integral_constant<int, idx>{}, std::forward<S>(s)))
@@ -425,7 +425,7 @@ struct context {
 
     // Get name of field, by index
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_name() ->
+    VISIT_STRUCT_CONSTEXPR static auto get_name() ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
                  decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_name(std::integral_constant<int, idx>{}))
@@ -435,13 +435,13 @@ struct context {
     }
 
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<idx, S>()) {
+    VISIT_STRUCT_CONSTEXPR static auto get_name(S &&) -> decltype(get_name<idx, S>()) {
       return get_name<idx, S>();
     }
 
     // Get member pointer, by index
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_pointer() ->
+    VISIT_STRUCT_CONSTEXPR static auto get_pointer() ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
                  decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_pointer(std::integral_constant<int, idx>{}))
@@ -451,13 +451,13 @@ struct context {
     }
 
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_pointer(S &&) -> decltype(get_pointer<idx, S>()) {
+    VISIT_STRUCT_CONSTEXPR static auto get_pointer(S &&) -> decltype(get_pointer<idx, S>()) {
       return get_pointer<idx, S>();
     }
 
     // Get member accessor, by index
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_accessor() ->
+    VISIT_STRUCT_CONSTEXPR static auto get_accessor() ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
                  decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_accessor(std::integral_constant<int, idx>{}))
@@ -467,7 +467,7 @@ struct context {
     }
 
     template <int idx, typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>()) {
+    VISIT_STRUCT_CONSTEXPR static auto get_accessor(S &&) -> decltype(get_accessor<idx, S>()) {
       return get_accessor<idx, S>();
     }
 
@@ -483,7 +483,7 @@ struct context {
 
     // Get name of structure
     template <typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_name() ->
+    VISIT_STRUCT_CONSTEXPR static auto get_name() ->
       typename std::enable_if<
                  traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
                  decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_name())
@@ -493,7 +493,7 @@ struct context {
     }
 
     template <typename S>
-    VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<S>()) {
+    VISIT_STRUCT_CONSTEXPR static auto get_name(S &&) -> decltype(get_name<S>()) {
       return get_name<S>();
     }
 };
