@@ -1,0 +1,31 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ "master" ]
+    # See docu here: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-and-excluding-branches
+    # it seems pretty similar to .gitignore
+    paths:
+      - '!**.md'
+      - '**'
+  pull_request:
+    paths:
+      - '!**.md'
+      - '**'
+
+jobs:
+  # builds and tests c++ code
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: install boost, gcc, clang
+      run: sudo apt-get install libboost1.83-dev libboost1.83-tools-dev clang gcc
+    - name: print versions
+      run: gcc --version && clang --version
+    - name: cat test
+      run: ls -al && cat run_tests.sh
+    - name: test gcc
+      run: ./run_tests.sh --toolset=gcc
+    - name: test clang
+      run: ./run_tests.sh --toolset=clang
