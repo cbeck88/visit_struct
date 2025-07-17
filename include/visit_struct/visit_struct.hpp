@@ -18,8 +18,8 @@
 // Library version
 
 #define VISIT_STRUCT_VERSION_MAJOR 1
-#define VISIT_STRUCT_VERSION_MINOR 1
-#define VISIT_STRUCT_VERSION_PATCH 2
+#define VISIT_STRUCT_VERSION_MINOR 2
+#define VISIT_STRUCT_VERSION_PATCH 0
 
 #define VISIT_STRUCT_STRING_HELPER(X) #X
 #define VISIT_STRUCT_STRING(X) VISIT_STRUCT_STRING_HELPER(X)
@@ -61,16 +61,19 @@ namespace visit_struct {
 namespace traits {
 
 // Primary template which is specialized to register a type
-template <typename T, typename ENABLE = void>
+// The context parameter is set when a user wants to register multiple visitation patterns,
+// to include or exclude some field in different contexts.
+template <typename T, typename CONTEXT = void>
 struct visitable;
 
 // Helper template which checks if a type is registered
-template <typename T, typename ENABLE = void>
+template <typename T, typename CONTEXT = void, typename ENABLE = void>
 struct is_visitable : std::false_type {};
 
-template <typename T>
+template <typename T, typename CONTEXT>
 struct is_visitable<T,
-                    typename std::enable_if<traits::visitable<T>::value>::type>
+                    CONTEXT,
+                    typename std::enable_if<traits::visitable<T, CONTEXT>::value>::type>
  : std::true_type {};
 
 // Helper template which removes cv and reference from a type (saves some typing)
@@ -298,6 +301,204 @@ VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<S>()) {
   return get_name<S>();
 }
 
+// Alternate visitation patterns can be registered using VISITABLE_STRUCT_IN_CONTEXT.
+// Then, use visit_struct::context<C>::for_each and similar to refer to special contexts.
+template <typename CONTEXT>
+struct context {
+
+    // Return number of fields in a visitable struct
+    template <typename S>
+    VISIT_STRUCT_CONSTEXPR std::size_t field_count()
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::field_count;
+    }
+
+    template <typename S>
+    VISIT_STRUCT_CONSTEXPR std::size_t field_count(S &&) { return field_count<S>(); }
+
+
+    // apply_visitor (one struct instance)
+    template <typename S, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S && s) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      traits::visitable<traits::clean_t<S>, CONTEXT>::apply(std::forward<V>(v), std::forward<S>(s));
+    }
+
+    // apply_visitor (two struct instances)
+    template <typename S1, typename S2, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v, S1 && s1, S2 && s2) ->
+      typename std::enable_if<
+                 traits::is_visitable<
+                   traits::clean_t<typename traits::common_type<S1, S2>::type>,
+                   CONTEXT
+                 >::value
+               >::type
+    {
+      using common_S = typename traits::common_type<S1, S2>::type;
+      traits::visitable<traits::clean_t<common_S>, CONTEXT>::apply(std::forward<V>(v),
+                                                                   std::forward<S1>(s1),
+                                                                   std::forward<S2>(s2));
+    }
+
+    // for_each (Alternate syntax for apply_visitor, reverses order of arguments)
+    template <typename V, typename S>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S && s, V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      traits::visitable<traits::clean_t<S>, CONTEXT>::apply(std::forward<V>(v), std::forward<S>(s));
+    }
+
+    // for_each with two structure instances
+    template <typename S1, typename S2, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto for_each(S1 && s1, S2 && s2, V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<
+                   traits::clean_t<typename traits::common_type<S1, S2>::type>,
+                   CONTEXT
+                 >::value
+               >::type
+    {
+      using common_S = typename traits::common_type<S1, S2>::type;
+      traits::visitable<traits::clean_t<common_S>, CONTEXT>::apply(std::forward<V>(v),
+                                                                   std::forward<S1>(s1),
+                                                                   std::forward<S2>(s2));
+    }
+
+    // Visit the types (visit_struct::type_c<...>) of the registered members
+    template <typename S, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_types(V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      traits::visitable<traits::clean_t<S>, CONTEXT>::visit_types(std::forward<V>(v));
+    }
+
+    // Visit the member pointers (&S::a) of the registered members
+    template <typename S, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_pointers(V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      traits::visitable<traits::clean_t<S>, CONTEXT>::visit_pointers(std::forward<V>(v));
+    }
+
+    // Visit the accessors (function objects) of the registered members
+    template <typename S, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto visit_accessors(V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      traits::visitable<traits::clean_t<S>, CONTEXT>::visit_accessors(std::forward<V>(v));
+    }
+
+
+    // Apply visitor (with no instances)
+    // This calls visit_pointers, for backwards compat reasons
+    template <typename S, typename V>
+    VISIT_STRUCT_CXX14_CONSTEXPR auto apply_visitor(V && v) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value
+               >::type
+    {
+      visit_struct::visit_pointers<S>(std::forward<V>(v));
+    }
+
+
+    // Get value by index (like std::get for tuples)
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get(S && s) ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>>::value,
+                 decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_value(std::integral_constant<int, idx>{}, std::forward<S>(s)))
+               >::type
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::get_value(std::integral_constant<int, idx>{}, std::forward<S>(s));
+    }
+
+    // Get name of field, by index
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_name() ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
+                 decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_name(std::integral_constant<int, idx>{}))
+               >::type
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::get_name(std::integral_constant<int, idx>{});
+    }
+
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<idx, S>()) {
+      return get_name<idx, S>();
+    }
+
+    // Get member pointer, by index
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_pointer() ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
+                 decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_pointer(std::integral_constant<int, idx>{}))
+               >::type
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::get_pointer(std::integral_constant<int, idx>{});
+    }
+
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_pointer(S &&) -> decltype(get_pointer<idx, S>()) {
+      return get_pointer<idx, S>();
+    }
+
+    // Get member accessor, by index
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_accessor() ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
+                 decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_accessor(std::integral_constant<int, idx>{}))
+               >::type
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::get_accessor(std::integral_constant<int, idx>{});
+    }
+
+    template <int idx, typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>()) {
+      return get_accessor<idx, S>();
+    }
+
+    // Get type, by index
+    template <int idx, typename S>
+    struct type_at_s {
+      using type_c = decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::type_at(std::integral_constant<int, idx>{}));
+      using type = typename type_c::type;
+    };
+
+    template <int idx, typename S>
+    using type_at = typename type_at_s<idx, S>::type;
+
+    // Get name of structure
+    template <typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_name() ->
+      typename std::enable_if<
+                 traits::is_visitable<traits::clean_t<S>, CONTEXT>::value,
+                 decltype(traits::visitable<traits::clean_t<S>, CONTEXT>::get_name())
+               >::type
+    {
+      return traits::visitable<traits::clean_t<S>, CONTEXT>::get_name();
+    }
+
+    template <typename S>
+    VISIT_STRUCT_CONSTEXPR auto get_name(S &&) -> decltype(get_name<S>()) {
+      return get_name<S>();
+    }
+};
+
+
 /***
  * To implement the VISITABLE_STRUCT macro, we need a map-macro, which can take
  * the name of a macro and some other arguments, and apply that macro to each other argument.
@@ -507,6 +708,66 @@ namespace traits {                                                              
                                                                                                    \
 template <>                                                                                        \
 struct visitable<STRUCT_NAME, void> {                                                              \
+                                                                                                   \
+  using this_type = STRUCT_NAME;                                                                   \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR auto get_name()                                                    \
+    -> decltype(#STRUCT_NAME) {                                                                    \
+    return #STRUCT_NAME;                                                                           \
+  }                                                                                                \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
+                                                                                                   \
+  template <typename V, typename S>                                                                \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V, typename S1, typename S2>                                                  \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor)                            \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PTR, __VA_ARGS__)                               \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor)                               \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor)                           \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
+  }                                                                                                \
+                                                                                                   \
+  struct fields_enum {                                                                             \
+    enum index { __VA_ARGS__ };                                                                    \
+  };                                                                                               \
+                                                                                                   \
+  VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MAKE_GETTERS, __VA_ARGS__)                                      \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
+};                                                                                                 \
+                                                                                                   \
+}                                                                                                  \
+}                                                                                                  \
+static_assert(true, "")
+
+#define VISITABLE_STRUCT_IN_CONTEXT(CONTEXT, STRUCT_NAME, ...)                                     \
+namespace visit_struct {                                                                           \
+namespace traits {                                                                                 \
+                                                                                                   \
+template <>                                                                                        \
+struct visitable<STRUCT_NAME, CONTEXT> {                                                           \
                                                                                                    \
   using this_type = STRUCT_NAME;                                                                   \
                                                                                                    \
