@@ -35,6 +35,13 @@ VISITABLE_STRUCT(test_struct_two, d, i, b);
 static_assert(visit_struct::traits::is_visitable<test_struct_two>::value, "WTF");
 static_assert(visit_struct::field_count<test_struct_two>() == 3, "WTF");
 
+// Make test struct two have a special context for visitation
+struct MyContext {};
+VISITABLE_STRUCT_IN_CONTEXT(MyContext, test_struct_two, b, i, d, s);
+
+static_assert(visit_struct::traits::is_visitable<test_struct_two, MyContext>::value, "WTF");
+static_assert(visit_struct::context<MyContext>::field_count<test_struct_two>() == 4, "WTF");
+
 /***
  * Test visitors
  */
@@ -312,10 +319,25 @@ int main() {
     visit_struct::apply_visitor(vis2, s);
 
     assert(vis2.result.size() == 3);
+    assert(vis2.result[0].first == std::string{"d"});
     assert(vis2.result[0].second == &s.d);
+    assert(vis2.result[1].first == std::string{"i"});
     assert(vis2.result[1].second == &s.i);
+    assert(vis2.result[2].first == std::string{"b"});
     assert(vis2.result[2].second == &s.b);
 
+    test_visitor_two vis2_context;
+    visit_struct::context<MyContext>::apply_visitor(vis2_context, s);
+
+    assert(vis2_context.result.size() == 4);
+    assert(vis2_context.result[0].first == std::string{"b"});
+    assert(vis2_context.result[0].second == &s.b);
+    assert(vis2_context.result[1].first == std::string{"i"});
+    assert(vis2_context.result[1].second == &s.i);
+    assert(vis2_context.result[2].first == std::string{"d"});
+    assert(vis2_context.result[2].second == &s.d);
+    assert(vis2_context.result[3].first == std::string{"s"});
+    assert(vis2_context.result[3].second == &s.s);
 
     test_struct_two t{ true, -14, .75, "bar" };
 
