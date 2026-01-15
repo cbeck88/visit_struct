@@ -275,6 +275,22 @@ VISIT_STRUCT_CONSTEXPR auto get_accessor(S &&) -> decltype(get_accessor<idx, S>(
   return get_accessor<idx, S>();
 }
 
+// Get member offset, by index
+template <int idx, typename S>
+VISIT_STRUCT_CONSTEXPR auto get_offset() ->
+  typename std::enable_if<
+             traits::is_visitable<traits::clean_t<S>>::value,
+             decltype(traits::visitable<traits::clean_t<S>>::get_offset(std::integral_constant<int, idx>{}))
+           >::type
+{
+  return traits::visitable<traits::clean_t<S>>::get_offset(std::integral_constant<int, idx>{});
+}
+
+template <int idx, typename S>
+VISIT_STRUCT_CONSTEXPR auto get_offset(S &&) -> size_t {
+  return get_offset<idx, S>();
+}
+
 // Get type, by index
 template <int idx, typename S>
 struct type_at_s {
@@ -284,6 +300,7 @@ struct type_at_s {
 
 template <int idx, typename S>
 using type_at = typename type_at_s<idx, S>::type;
+
 
 // Get name of structure
 template <typename S>
@@ -638,6 +655,9 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
  * These macros are used with VISIT_STRUCT_PP_MAP
  */
 
+ #define VISIT_STRUCT_MEMBER_HELPER_OFFSET(MEMBER_NAME)                                            \
+  std::forward<V>(visitor)(#MEMBER_NAME, [](){return offsetof(this_type, MEMBER_NAME);});
+
 #define VISIT_STRUCT_FIELD_COUNT(MEMBER_NAME)                                                      \
   + 1
 
@@ -681,6 +701,12 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
     get_accessor(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                         \
       visit_struct::accessor<decltype(&this_type::MEMBER_NAME), &this_type::MEMBER_NAME > {        \
     return {};                                                                                     \
+  }                                                                                                \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR auto                                                               \
+    get_offset(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                           \
+      size_t {                                                                                     \
+    return offsetof(this_type, MEMBER_NAME);                                                       \
   }                                                                                                \
                                                                                                    \
   static auto                                                                                      \
@@ -749,6 +775,12 @@ struct visitable<STRUCT_NAME, void> {                                           
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
   }                                                                                                \
                                                                                                    \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_offsets(V && visitor)                             \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_OFFSET, __VA_ARGS__)                            \
+  }                                                                                                \
+                                                                                                   \
   struct fields_enum {                                                                             \
     enum index { __VA_ARGS__ };                                                                    \
   };                                                                                               \
@@ -807,6 +839,12 @@ struct visitable<STRUCT_NAME, CONTEXT> {                                        
   VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor)                           \
   {                                                                                                \
     VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_offsets(V && visitor)                             \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_OFFSET, __VA_ARGS__)                            \
   }                                                                                                \
                                                                                                    \
   struct fields_enum {                                                                             \
