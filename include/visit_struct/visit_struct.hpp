@@ -687,6 +687,9 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
     type_at(std::integral_constant<int, fields_enum::MEMBER_NAME>) ->                              \
       visit_struct::type_c<decltype(this_type::MEMBER_NAME)>;
 
+#define VISIT_STRUCT_UNPACK_PARENS(X) VISIT_STRUCT_UNPACK_PARENS_ X
+
+#define VISIT_STRUCT_UNPACK_PARENS_(...) __VA_ARGS__
 
 // This macro specializes the trait, provides "apply" method which does the work.
 // Below, template parameter S should always be the same as STRUCT_NAME modulo const and reference.
@@ -701,126 +704,81 @@ static VISIT_STRUCT_CONSTEXPR const int max_visitable_members = 69;
 //          values, and have a new specialization for each member. But, specializations can only
 //          be made at namespace scope. So to keep things tidy and contained within this trait,
 //          we use tag dispatch with std::integral_constant<int> instead.
+#define VISITABLE_STRUCT_IMPL(TPARAMS, FULL_TYPE, STRUCT_NAME, CONTEXT, ...)                       \
+namespace visit_struct {                                                                           \
+namespace traits {                                                                                 \
+                                                                                                   \
+template <VISIT_STRUCT_UNPACK_PARENS(TPARAMS)>                                                     \
+struct visitable<VISIT_STRUCT_UNPACK_PARENS(FULL_TYPE), CONTEXT> {                                 \
+                                                                                                   \
+  using this_type = VISIT_STRUCT_UNPACK_PARENS(FULL_TYPE);                                         \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR auto get_name()                                                    \
+    -> decltype(#STRUCT_NAME) {                                                                    \
+    return #STRUCT_NAME;                                                                           \
+  }                                                                                                \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
+                                                                                                   \
+  template <typename V, typename S>                                                                \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V, typename S1, typename S2>                                                  \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor)                            \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PTR, __VA_ARGS__)                               \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor)                               \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
+  }                                                                                                \
+                                                                                                   \
+  template <typename V>                                                                            \
+  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor)                           \
+  {                                                                                                \
+    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
+  }                                                                                                \
+                                                                                                   \
+  struct fields_enum {                                                                             \
+    enum index { __VA_ARGS__ };                                                                    \
+  };                                                                                               \
+                                                                                                   \
+  VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MAKE_GETTERS, __VA_ARGS__)                                      \
+                                                                                                   \
+  static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
+};                                                                                                 \
+                                                                                                   \
+}                                                                                                  \
+}                                                                                                  \
+static_assert(true, "")
 
 #define VISITABLE_STRUCT(STRUCT_NAME, ...)                                                         \
-namespace visit_struct {                                                                           \
-namespace traits {                                                                                 \
-                                                                                                   \
-template <>                                                                                        \
-struct visitable<STRUCT_NAME, void> {                                                              \
-                                                                                                   \
-  using this_type = STRUCT_NAME;                                                                   \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR auto get_name()                                                    \
-    -> decltype(#STRUCT_NAME) {                                                                    \
-    return #STRUCT_NAME;                                                                           \
-  }                                                                                                \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
-                                                                                                   \
-  template <typename V, typename S>                                                                \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V, typename S1, typename S2>                                                  \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor)                            \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PTR, __VA_ARGS__)                               \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor)                               \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor)                           \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
-  }                                                                                                \
-                                                                                                   \
-  struct fields_enum {                                                                             \
-    enum index { __VA_ARGS__ };                                                                    \
-  };                                                                                               \
-                                                                                                   \
-  VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MAKE_GETTERS, __VA_ARGS__)                                      \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
-};                                                                                                 \
-                                                                                                   \
-}                                                                                                  \
-}                                                                                                  \
-static_assert(true, "")
+  VISITABLE_STRUCT_IMPL((), (STRUCT_NAME), STRUCT_NAME, void, __VA_ARGS__)
 
 #define VISITABLE_STRUCT_IN_CONTEXT(CONTEXT, STRUCT_NAME, ...)                                     \
-namespace visit_struct {                                                                           \
-namespace traits {                                                                                 \
-                                                                                                   \
-template <>                                                                                        \
-struct visitable<STRUCT_NAME, CONTEXT> {                                                           \
-                                                                                                   \
-  using this_type = STRUCT_NAME;                                                                   \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR auto get_name()                                                    \
-    -> decltype(#STRUCT_NAME) {                                                                    \
-    return #STRUCT_NAME;                                                                           \
-  }                                                                                                \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR const std::size_t field_count = 0                                  \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_FIELD_COUNT, __VA_ARGS__);                                    \
-                                                                                                   \
-  template <typename V, typename S>                                                                \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S && struct_instance)               \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER, __VA_ARGS__)                                   \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V, typename S1, typename S2>                                                  \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void apply(V && visitor, S1 && s1, S2 && s2)                 \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PAIR, __VA_ARGS__)                              \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_pointers(V && visitor)                            \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_PTR, __VA_ARGS__)                               \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_types(V && visitor)                               \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_TYPE, __VA_ARGS__)                              \
-  }                                                                                                \
-                                                                                                   \
-  template <typename V>                                                                            \
-  VISIT_STRUCT_CXX14_CONSTEXPR static void visit_accessors(V && visitor)                           \
-  {                                                                                                \
-    VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MEMBER_HELPER_ACC, __VA_ARGS__)                               \
-  }                                                                                                \
-                                                                                                   \
-  struct fields_enum {                                                                             \
-    enum index { __VA_ARGS__ };                                                                    \
-  };                                                                                               \
-                                                                                                   \
-  VISIT_STRUCT_PP_MAP(VISIT_STRUCT_MAKE_GETTERS, __VA_ARGS__)                                      \
-                                                                                                   \
-  static VISIT_STRUCT_CONSTEXPR const bool value = true;                                           \
-};                                                                                                 \
-                                                                                                   \
-}                                                                                                  \
-}                                                                                                  \
-static_assert(true, "")
+  VISITABLE_STRUCT_IMPL((), (STRUCT_NAME), STRUCT_NAME, CONTEXT, __VA_ARGS__)
+
+#define VISITABLE_TEMPLATE_STRUCT(TPARAMS, STRUCT_NAME, TARGS, ...)                                \
+  VISITABLE_STRUCT_IMPL(TPARAMS,                                                                   \
+    (STRUCT_NAME<VISIT_STRUCT_UNPACK_PARENS(TARGS)>),                                              \
+    STRUCT_NAME, void, __VA_ARGS__)
+
+#define VISITABLE_TEMPLATE_STRUCT_IN_CONTEXT(CONTEXT, TPARAMS, STRUCT_NAME, TARGS, ...)            \
+  VISITABLE_STRUCT_IMPL(TPARAMS,                                                                   \
+    (STRUCT_NAME<VISIT_STRUCT_UNPACK_PARENS(TARGS)>),                                              \
+    STRUCT_NAME, CONTEXT, __VA_ARGS__)
 
 } // end namespace visit_struct
 
