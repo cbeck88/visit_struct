@@ -42,6 +42,26 @@ VISITABLE_STRUCT_IN_CONTEXT(MyContext, test_struct_two, b, i, d, s);
 static_assert(visit_struct::traits::is_visitable<test_struct_two, MyContext>::value, "WTF");
 static_assert(visit_struct::context<MyContext>::field_count<test_struct_two>() == 4, "WTF");
 
+// templated class
+template<typename A, typename B, typename C, typename D>
+struct templated_struct {
+  A a;
+  B b;
+  C c;
+  D d;
+};
+
+VISITABLE_TEMPLATE_STRUCT((typename A, typename B, typename C, typename D), templated_struct, (A, B, C, D), a, b, c);
+// Note that D is not registered
+
+static_assert(visit_struct::traits::is_visitable<templated_struct<int, float, std::string, double>>::value, "WTF");
+static_assert(visit_struct::field_count<templated_struct<int, float, std::string, double>>() == 3, "WTF");
+
+VISITABLE_TEMPLATE_STRUCT_IN_CONTEXT(MyContext, (typename A, typename B, typename C, typename D), templated_struct, (A, B, C, D), d, c, b, a);
+
+static_assert(visit_struct::traits::is_visitable<templated_struct<int, float, std::string, double>, MyContext>::value, "WTF");
+static_assert(visit_struct::context<MyContext>::field_count<templated_struct<int, float, std::string, double>>() == 4, "WTF");
+
 /***
  * Test visitors
  */
@@ -369,6 +389,44 @@ int main() {
     assert(std::string("test_struct_two") == visit_struct::get_name(s));
     assert(std::string("test_struct_two") == visit_struct::get_name(t));
     assert(std::string("test_struct_two") == visit_struct::get_name<test_struct_two>());
+  }
+
+  // template class
+  {
+    templated_struct<int, float, std::string, double> s{ 5, 7.5f, "asdf", -1.0 };
+
+	debug_print(s);
+
+    assert(visit_struct::get<0>(s) == 5);
+    assert(visit_struct::get<1>(s) == 7.5f);
+    assert(visit_struct::get<2>(s) == "asdf");
+    assert(visit_struct::get_name<0>(s) == std::string{"a"});
+    assert(visit_struct::get_name<1>(s) == std::string{"b"});
+    assert(visit_struct::get_name<2>(s) == std::string{"c"});
+
+    test_visitor_one vis1;
+    visit_struct::apply_visitor(vis1, s);
+
+    assert(vis1.result.size() == 3);
+    assert(vis1.result[0].first == "a");
+    assert(vis1.result[0].second == "5");
+    assert(vis1.result[1].first == "b");
+    assert(vis1.result[1].second == "7.500000");
+    assert(vis1.result[2].first == "c");
+    assert(vis1.result[2].second == "asdf");
+
+    test_visitor_two vis2;
+    visit_struct::apply_visitor(vis2, s);
+
+    assert(vis2.result.size() == 3);
+    assert(vis2.result[0].second == &s.a);
+    assert(vis2.result[1].second == &s.b);
+    assert(vis2.result[2].second == &s.c);
+
+    // test get_name
+    assert(std::string("templated_struct") == visit_struct::get_name(s));
+    assert((std::string("templated_struct") == visit_struct::get_name<templated_struct<int, float, std::string, double>>()));
+
   }
 
   // Test move semantics
